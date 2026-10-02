@@ -15,7 +15,7 @@ onUnmounted(() => reader.clear())
       <slot />
     </main>
     <RightRail fan-width="13rem">
-      <TocFanNav class="hidden md:block" v-if="reader.hasToc" />
+      <TocFanNav v-if="reader.hasToc" class="hidden md:block" />
     </RightRail>
   </div>
 </template>

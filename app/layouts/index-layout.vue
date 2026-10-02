@@ -1,14 +1,11 @@
 <template>
-    <div class="layout">
+  <div class="layout">
     <main class="layout-main">
       <slot />
     </main>
     <RightTabWithNav />
-    </div>
+  </div>
 </template>
-<script lang="ts">
-import RightTabWithNav from '~/components/RightTabWithNav.vue'
-</script>
 
 <style lang="scss" scoped>
 :global(::-webkit-scrollbar) {

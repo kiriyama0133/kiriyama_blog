@@ -1,16 +1,13 @@
 <template>
-    <div class="layout">
+  <div class="layout">
     <main class="layout-main">
       <slot />
     </main>
     <ClientOnly>
       <RightTab class="right_tab" />
     </ClientOnly>
-    </div>
+  </div>
 </template>
-<script lang="ts">
-import RightTab from '~/components/RightTab.vue'
-</script>
 
 <style lang="scss" scoped>
 .right_tab {

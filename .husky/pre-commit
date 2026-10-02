@@ -1,0 +1,4 @@
+# 提交前只处理「暂存区」的文件：eslint --fix + prettier --write
+# 具体匹配规则见 package.json 的 lint-staged 字段
+# husky 会把 node_modules/.bin 注入 PATH，所以这里可以直接写命令名
+lint-staged

@@ -1,0 +1,4 @@
+# 校验提交信息是否是 conventional commits（feat/fix/chore/docs…）
+# 规则见 commitlint.config.mjs —— 只有规范提交，CHANGELOG 才生成得出来
+# $1 是 git 传来的提交信息文件路径
+commitlint --edit "$1"

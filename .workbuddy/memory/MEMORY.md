@@ -52,6 +52,14 @@
   - `minSpin`(320ms) 是最短展示时长，防 spinner 闪现。
 - `app/components/SpinCircle.vue`：纯 CSS 转圈；颜色写死（SFC scoped 读不到 main.scss 的 `$color-*`）：#E0E0F0 / #969780。
 
+## 页面 meta（标题 / 描述）
+- **没有 `defineMeta` 这个 API**。`definePageMeta` 是**编译期宏**，参数只能是静态字面量（所以它只用来放 `layout`）；笔记 title 是 `await queryCollection()` 的运行时值 → 必须走 **`useSeoMeta` + getter**，并顺带解决客户端跳转时 head 的响应式更新与回收。
+- 站点名/描述的唯一出处：`app/utils/site.ts`（`SITE_NAME` / `SITE_DESCRIPTION` / `pageTitle(标题)`）。标题格式统一 `<笔记标题> · Blog`。
+- **nuxt/content 的 title/description 会自动兜底**（`sql_dump.txt` 实证）：frontmatter 没写 title → **用文件名**（`Vue/axios.md` → `Axios`）；没写 description → **用首段正文**（`about.md` → `Back home`，首块是代码块时为空 → 此时不渲染 meta 标签，别塞空串）。
+- `[...slug].vue` 在正文**没有前导 h1** 时补 `<h1 class="doc-title">`：判据 = `body.value` 里第一个 `Array.isArray(n) && typeof n[0]==='string'` 的节点 tag 是不是 `'h1'`。不少笔记（axios/Pinia/Nuxt4）正文无 h1，不补的话页面「没有名字」。放 `.markdown-body` 内可白蹭现成 h1 样式。
+- **路由 path 是小写的**：`content/Vue/axios.md` → `/vue/axios`；写 `/Vue/axios` 直接 404（调试时别被这个骗了）。
+- 404 页的 `<title>` 是 Nuxt 默认的 `404 - Page not found | Nuxt`，没接站点名。
+
 ## 本机调试环境
 - dev server 一般跑在 **3000 且只绑 IPv6** → Node 里用 `host:'::1'`，`127.0.0.1` 会 ECONNREFUSED。
 - bash 里 coreutils（`ls/head/dirname`）缺失 → 文件与探测一律用 `node -e`。

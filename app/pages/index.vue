@@ -5,16 +5,14 @@ import BlogCard from '~/components/BlogCard.vue'
 import Search from '~/components/Search.vue'
 import TypeDropdown from '~/components/TypeDropdown.vue'
 import SpinCircle from '~/components/SpinCircle.vue'
+import { SITE_DESCRIPTION, pageTitle } from '~/utils/site'
 
 const PAGE_SIZE = 10
 
 const store = useContentStore()
 
 const { data: pages } = await useAsyncData<ContentMeta[]>('pages-list', () =>
-  queryCollection('content')
-    .select('path', 'title', 'description')
-    .order('path', 'ASC')
-    .all(),
+  queryCollection('content').select('path', 'title', 'description').order('path', 'ASC').all()
 )
 
 watchEffect(() => {
@@ -25,14 +23,18 @@ watchEffect(() => {
 
 const { sentinel, visibleItems, hasMore, loadingMore, total } = useInfiniteList(
   computed(() => store.filteredSummaries),
-  { pageSize: PAGE_SIZE },
+  { pageSize: PAGE_SIZE }
 )
 
-definePageMeta(
-  {
-    layout: 'index-layout',
-  }
-)
+// 列表页只有站点名，不挂「· 站点名」尾巴
+useSeoMeta({
+  title: () => pageTitle('全部笔记'),
+  description: SITE_DESCRIPTION
+})
+
+definePageMeta({
+  layout: 'index-layout'
+})
 </script>
 
 <template>
@@ -53,16 +55,14 @@ definePageMeta(
             type="button"
             class="filter-reset cursor-pointer text-light-accent underline hover:text-light-font-h"
             @click="store.clearFilters()"
-          >清除筛选</button>
+          >
+            清除筛选
+          </button>
         </span>
         <span v-else>共 {{ store.totalCount }} 篇文档</span>
       </p>
 
-      <BlogCard
-        v-for="item in visibleItems"
-        :key="item.path"
-        :path="item.path"
-      >
+      <BlogCard v-for="item in visibleItems" :key="item.path" :path="item.path">
         <template #title>{{ item.title }}</template>
         <template #summary>{{ item.description }}</template>
       </BlogCard>
