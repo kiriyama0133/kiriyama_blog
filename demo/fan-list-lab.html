@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FanVirtualList · 弧形虚拟列表调参台</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: #16181d;
+    color: #e6e8ec;
+    font: 13px/1.5 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  }
+  .title { font-size: 15px; font-weight: 650; margin: 0 0 2px; }
+  .sub { color: #8b93a1; font-size: 12px; margin: 0; }
+
+  /* ---------- 左侧固定控制面板 ---------- */
+  .panel {
+    position: fixed; left: 20px; top: 20px; width: 322px;
+    max-height: calc(100vh - 40px); overflow-y: auto;
+    display: flex; flex-direction: column; gap: 11px;
+    padding: 16px; border-radius: 14px;
+    background: #1b1e24; border: 1px solid #262a32;
+    box-shadow: 0 20px 50px -24px rgb(0 0 0 / .9);
+  }
+  .row { display: flex; align-items: center; gap: 9px; }
+  .row label { width: 100px; color: #a8b0bd; flex: none; }
+  .row input[type=range] { flex: 1; min-width: 0; accent-color: #7f9cf5; }
+  .row .val { width: 58px; text-align: right; font-variant-numeric: tabular-nums; }
+  .seg { display: flex; gap: 5px; flex: 1; }
+  .seg button {
+    flex: 1; padding: 5px 0; border-radius: 7px; cursor: pointer;
+    background: #22262e; color: #a8b0bd; border: 1px solid #2f343e; font-size: 12px;
+  }
+  .seg button.on { background: #35406b; color: #dce3ff; border-color: #4c5b93; }
+  .readout {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px;
+    padding: 11px; border-radius: 10px; background: #171a20; border: 1px solid #262a32;
+    font-variant-numeric: tabular-nums;
+  }
+  .readout div span { color: #8b93a1; }
+  .code {
+    white-space: pre; overflow-x: auto; padding: 10px; border-radius: 10px;
+    background: #171a20; border: 1px solid #262a32;
+    color: #b9c6ff; font: 12px/1.6 ui-monospace, Consolas, monospace;
+  }
+  button.copy {
+    padding: 7px 14px; border-radius: 8px; cursor: pointer;
+    background: #35406b; color: #dce3ff; border: 1px solid #4c5b93;
+  }
+
+  /* ---------- 右侧固定扇形视口 ---------- */
+  .viewport-wrap { position: fixed; right: 34px; top: 50%; transform: translateY(-50%); }
+  .viewport {
+    position: relative; width: 220px; height: 540px;
+    border-radius: 14px;
+    background: #fefef1;                     /* 模拟博客浅色页面 */
+    border: 1px solid #2a2d35;
+    box-shadow: 0 18px 50px -22px rgb(0 0 0 / .8);
+    overflow: hidden;
+  }
+  .axis { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  .scroller {
+    position: absolute; inset: 0; overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none; z-index: 1;
+  }
+  .scroller::-webkit-scrollbar { display: none; }
+  .stage { position: sticky; top: 0; overflow: hidden; z-index: 1; }
+  .item { position: absolute; top: 0; left: 0; will-change: transform; }
+  .card {
+    display: block; width: 8rem; padding: 7px 12px;
+    border: 1px solid #e0e0f0; border-radius: 8px;
+    background: #fefef1; color: #6e6e70;
+    font-size: 13px; line-height: 1.15rem; text-decoration: none;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: background-color .25s, color .25s, border-color .25s, box-shadow .25s;
+  }
+  .item.is-front .card { box-shadow: 0 6px 18px -8px rgb(0 0 0 / .35); }
+  .item.is-active .card { background: #f0f0fe; border-color: #f0f0fe; color: #000; font-weight: 600; }
+  .hint {
+    position: absolute; left: 10px; bottom: 10px; z-index: 3;
+    padding: 3px 8px; border-radius: 999px;
+    background: rgb(0 0 0 / .55); color: #cbd2dc; font-size: 11px; pointer-events: none;
+  }
+
+  /* ---------- 用来产生"窗口滚动"的长页面 ---------- */
+  .article {
+    max-width: 680px;
+    margin-left: 380px;
+    padding: 56px 32px 80vh;
+    color: #9aa3b2;
+  }
+  .article h2 { color: #dce0e7; font-size: 19px; margin: 42px 0 10px; }
+  .article p { margin: 0 0 12px; line-height: 1.85; }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <div>
+    <p class="title">FanVirtualList · 调参台</p>
+    <p class="sub">左侧长页面负责产生窗口滚动，右侧扇形实时跟随。</p>
+  </div>
+
+  <div class="row"><label>driver</label>
+    <div class="seg" id="seg-driver">
+      <button data-v="self">self</button>
+      <button data-v="window">window</button>
+    </div>
+  </div>
+  <div class="row"><label>windowSpan</label><input type="range" id="s-span" min="0" max="23" step="1" /><div class="val" id="v-span"></div></div>
+
+  <div class="row"><label>itemHeight</label><input type="range" id="s-item" min="24" max="120" step="1" /><div class="val" id="v-item"></div></div>
+  <div class="row"><label>radius</label><input type="range" id="s-radius" min="200" max="2000" step="10" /><div class="val" id="v-radius"></div></div>
+  <div class="row"><label>maxAngle</label><input type="range" id="s-max" min="6" max="90" step="1" /><div class="val" id="v-max"></div></div>
+  <div class="row"><label>anchorX</label><input type="range" id="s-ax" min="0" max="1" step="0.01" /><div class="val" id="v-ax"></div></div>
+  <div class="row"><label>anchorY</label><input type="range" id="s-ay" min="0" max="1" step="0.01" /><div class="val" id="v-ay"></div></div>
+  <div class="row"><label>fade</label><input type="range" id="s-fade" min="0" max="1" step="0.05" /><div class="val" id="v-fade"></div></div>
+
+  <div class="row"><label>orientation</label>
+    <div class="seg" id="seg-orient">
+      <button data-v="upright">upright</button>
+      <button data-v="tangent">tangent</button>
+      <button data-v="radial">radial</button>
+    </div>
+  </div>
+
+  <div class="readout" id="readout"></div>
+  <div class="row">
+    <button class="copy" id="to-top">到页面顶部</button>
+    <button class="copy" id="to-bottom">到页面底部</button>
+  </div>
+  <div class="code" id="code"></div>
+  <button class="copy" id="copy">复制组件参数</button>
+</div>
+
+<div class="viewport-wrap">
+  <div class="viewport" id="viewport">
+    <svg class="axis" id="axis"></svg>
+    <div class="scroller" id="scroller">
+      <div class="stage" id="stage"></div>
+      <div id="spacer"></div>
+    </div>
+    <div class="hint" id="hint"></div>
+  </div>
+</div>
+
+<article class="article" id="article"></article>
+
+<script>
+/* ------------------------------------------------------------------
+   和 FanVirtualList.vue 完全一致的一小段几何：
+     stepRad = itemHeight / radius          // 每条跨越的圆心角
+     theta   = (progress - index) * stepRad // 相对「前位」的偏角
+     x       = anchorX + r * (1 - cos θ)    // 圆心 = 锚点向右 r
+     y       = anchorY - r * sin θ
+     rotation: tangent → θ   /   radial → θ-90°   /   upright → 0
+   驱动：
+     self   → progress = 轨道 scrollTop / itemHeight
+     window → progress = 页面滚动进度 × windowSpan   （和 RightTab 同款，
+              绝对值映射，没有增量；轨道 scrollTop 只是被同步过去，
+              好让"取窗口"的区间跟着走）
+------------------------------------------------------------------ */
+const TITLES = [
+  'Vue 3 组合式 API', 'Nuxt 4 目录结构', 'Tailwind v4 主题变量', 'SCSS 与 Tailwind 的边界',
+  '虚拟列表原理', '极坐标与旋转矩阵', 'sticky 的钉住行为', '滚动驱动动画',
+  'CSS transform 合成顺序', 'Content 模块查询', 'Pinia 状态设计', 'SSR 与 ClientOnly',
+  '设计令牌与调色板', '可访问性基础', '合成层与 will-change', 'IntersectionObserver',
+  '字体排印尺度', '响应式断点策略', 'SVG 路径动画', '暗色模式实现',
+  '构建产物体积优化', 'SEO 与 meta 输出', '图片懒加载', '部署与缓存',
+]
+
+const geo = {
+  itemHeight: 56, radius: 520, maxAngle: 40,
+  anchorX: 0.32, anchorY: 0.5, fade: 0.85,
+  orientation: 'tangent',
+  driver: 'window', windowSpan: 0,   // 0 = 整份列表
+}
+
+const viewport = document.getElementById('viewport')
+const scroller = document.getElementById('scroller')
+const stage = document.getElementById('stage')
+const spacer = document.getElementById('spacer')
+const axis = document.getElementById('axis')
+const readout = document.getElementById('readout')
+const codeEl = document.getElementById('code')
+const hint = document.getElementById('hint')
+
+/* 生成一段长文，用来产生真实的窗口滚动 */
+const SENTENCE = '把「轨道距离」换算成圆心角之后，弧形排布就退化成一次普通的三角函数计算，虚拟滚动该做的事一件都没少。'
+document.getElementById('article').innerHTML = Array.from({ length: 16 }, (_, i) =>
+  `<h2>${i + 1}. ${TITLES[i % TITLES.length]}</h2>` +
+  `<p>${SENTENCE}${SENTENCE}</p><p>${SENTENCE}</p>`
+).join('')
+
+const pool = new Map()
+let activeIndex = 2
+
+/* 页面滚动进度 0~1（和 RightTab / 组件里的取法完全一致） */
+function pageProgress() {
+  const max = document.documentElement.scrollHeight - window.innerHeight
+  if (max <= 0) return 0
+  return Math.min(1, Math.max(0, window.scrollY / max))
+}
+function spanOf() {
+  return geo.windowSpan > 0 ? geo.windowSpan : Math.max(0, TITLES.length - 1)
+}
+
+function buildPool() {
+  pool.forEach(el => el.remove())
+  pool.clear()
+}
+
+function ensure(index) {
+  let el = pool.get(index)
+  if (el) return el
+  el = document.createElement('div')
+  el.className = 'item'
+  const a = document.createElement('a')
+  a.className = 'card'
+  a.href = 'javascript:void(0)'
+  a.textContent = TITLES[index]
+  a.addEventListener('click', () => { activeIndex = index; render() })
+  el.appendChild(a)
+  stage.appendChild(el)
+  pool.set(index, el)
+  return el
+}
+
+function render() {
+  const W = viewport.clientWidth
+  const H = viewport.clientHeight
+  stage.style.height = H + 'px'
+  // 占位高度：window 模式补一个"容器高"的尾巴，否则末尾几条到不了前位
+  spacer.style.height = (TITLES.length * geo.itemHeight + (geo.driver === 'window' ? H : 0)) + 'px'
+
+  const stepRad = geo.itemHeight / geo.radius
+  const stepDeg = stepRad * 180 / Math.PI
+  const maxRad = geo.maxAngle * Math.PI / 180
+
+  // 前位：window 模式直接由页面滚动进度换算（绝对值），self 模式取轨道
+  const progress = geo.driver === 'window'
+    ? pageProgress() * spanOf()
+    : scroller.scrollTop / geo.itemHeight
+
+  // window 模式顺手把轨道同步到前位，好让下面的「取窗口」区间跟着走
+  if (geo.driver === 'window') {
+    const target = progress * geo.itemHeight
+    if (Math.abs(scroller.scrollTop - target) > 0.5) scroller.scrollTop = target
+  }
+  const scrollTop = scroller.scrollTop
+
+  const anchorX = geo.anchorX * W
+  const anchorY = geo.anchorY * H
+  const r = geo.radius
+
+  // 虚拟窗口：索引区间 ≈ [progress - overscan, progress + capacity + overscan]
+  const overscan = Math.ceil(geo.maxAngle / stepDeg) + 3
+  const capacity = Math.ceil(H / geo.itemHeight)
+  const offset = Math.floor(scrollTop / geo.itemHeight) + 1
+  const from = Math.max(0, offset - overscan)
+  const to = Math.min(TITLES.length, offset + capacity + overscan)
+
+  let shown = 0
+  for (let i = from; i < to; i++) {
+    const theta = (progress - i) * stepRad
+    const thetaDeg = theta * 180 / Math.PI
+    const el = ensure(i)
+    if (Math.abs(theta) > maxRad) { el.style.display = 'none'; continue }
+    const x = anchorX + r * (1 - Math.cos(theta))
+    const y = anchorY - r * Math.sin(theta)
+    const rot = geo.orientation === 'upright' ? 0
+      : geo.orientation === 'radial' ? thetaDeg - 90
+      : thetaDeg
+    const t = Math.min(1, Math.abs(theta) / maxRad)
+    el.style.display = ''
+    el.style.transform =
+      `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) translate(-50%,-50%) rotate(${rot.toFixed(2)}deg)`
+    el.style.opacity = String(1 - geo.fade * t)
+    el.style.zIndex = String(1000 - Math.round(Math.abs(thetaDeg)))
+    el.classList.toggle('is-front', Math.abs(progress - i) < 0.5)
+    el.classList.toggle('is-active', i === activeIndex)
+    shown++
+  }
+  for (const [i, el] of pool) {
+    if (i < from || i >= to) { el.remove(); pool.delete(i) }
+  }
+
+  // 圆心 / 半径辅助线
+  const pivotX = anchorX + r
+  const pivotY = anchorY
+  axis.setAttribute('viewBox', `0 0 ${W} ${H}`)
+  axis.innerHTML = `
+    <circle cx="${pivotX}" cy="${pivotY}" r="${r}" fill="none" stroke="#c9c2ff" stroke-width="1" stroke-dasharray="4 5" />
+    <line x1="${pivotX}" y1="${pivotY}" x2="${anchorX}" y2="${anchorY}" stroke="#c9c2ff" stroke-width="1" stroke-dasharray="3 4" />
+    <circle cx="${anchorX}" cy="${anchorY}" r="3" fill="#7f9cf5" />
+  `
+
+  const visibleMax = Math.asin(Math.min(1, (H / 2) / r)) * 180 / Math.PI
+  const bulge = r * (1 - Math.cos(visibleMax * Math.PI / 180))
+
+  readout.innerHTML = `
+    <div><span>角度步进</span> ${stepDeg.toFixed(2)}°</div>
+    <div><span>可见半角</span> ±${visibleMax.toFixed(1)}°</div>
+    <div><span>页面滚动 y</span> ${Math.round(window.scrollY)}</div>
+    <div><span>页面进度</span> ${(pageProgress() * 100).toFixed(1)}%</div>
+    <div><span>轨道 scrollTop</span> ${Math.round(scrollTop)}</div>
+    <div><span>前位 progress</span> ${progress.toFixed(2)}</div>
+    <div><span>横向外凸</span> ${bulge.toFixed(0)}px</div>
+    <div><span>渲染 / 总数</span> ${shown} / ${TITLES.length}</div>
+    <div><span>窗口区间</span> [${from}, ${to})</div>
+    <div><span>整程条目数</span> ${spanOf() || '—'}</div>
+  `
+
+  codeEl.textContent =
+    `driver="${geo.driver}"\n` +
+    (geo.driver === 'window' && geo.windowSpan > 0 ? `:window-span="${geo.windowSpan}"\n` : '') +
+    `:item-height="${geo.itemHeight}"\n` +
+    `:radius="${geo.radius}"\n` +
+    `:max-angle="${geo.maxAngle}"\n` +
+    `orientation="${geo.orientation}"\n` +
+    `:anchor-x="${geo.anchorX}"\n` +
+    `:anchor-y="${geo.anchorY}"`
+}
+
+/* ---------------- 驱动开关 ----------------
+   窗口滚动不做任何转发，只是在 rAF 里重算 render()，
+   progress 由页面进度直接算出来。                              */
+function applyDriver() {
+  const windowed = geo.driver === 'window'
+  scroller.style.overflowY = windowed ? 'hidden' : 'auto'
+  // 实测：overflow:hidden + overscroll-behavior:contain 会把滚轮整块吞掉
+  //（轨道不滚、页面也不滚），所以 window 模式必须放开链
+  scroller.style.overscrollBehavior = windowed ? 'auto' : 'contain'
+  hint.textContent = windowed ? '滚动页面（滚轮穿透）' : '悬停在扇形上滚动'
+}
+
+window.addEventListener('scroll', () => {
+  requestAnimationFrame(render)
+}, { passive: true })
+
+/* ---------------- 控件 ---------------- */
+const sliders = [
+  ['s-span', 'windowSpan', 'v-span', v => (v > 0 ? v : '全部')],
+  ['s-item', 'itemHeight', 'v-item', v => v + 'px'],
+  ['s-radius', 'radius', 'v-radius', v => v + 'px'],
+  ['s-max', 'maxAngle', 'v-max', v => v + '°'],
+  ['s-ax', 'anchorX', 'v-ax', v => v],
+  ['s-ay', 'anchorY', 'v-ay', v => v],
+  ['s-fade', 'fade', 'v-fade', v => v],
+]
+
+for (const [id, key, valId, fmt] of sliders) {
+  const input = document.getElementById(id)
+  const out = document.getElementById(valId)
+  if (key === 'windowSpan') input.max = TITLES.length - 1
+  input.value = geo[key]
+  out.textContent = fmt(geo[key])
+  input.addEventListener('input', () => {
+    geo[key] = parseFloat(input.value)
+    out.textContent = fmt(geo[key])
+    requestAnimationFrame(render)
+  })
+}
+
+function bindSeg(id, key, before) {
+  const box = document.getElementById(id)
+  box.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      geo[key] = btn.dataset.v
+      box.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === btn))
+      before && before()
+      render()
+    })
+  })
+  box.querySelector(`button[data-v="${geo[key]}"]`).classList.add('on')
+}
+
+bindSeg('seg-orient', 'orientation')
+bindSeg('seg-driver', 'driver', applyDriver)
+
+document.getElementById('copy').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(codeEl.textContent)
+    const btn = document.getElementById('copy')
+    btn.textContent = '已复制 ✓'
+    setTimeout(() => (btn.textContent = '复制组件参数'), 1400)
+  } catch { /* ignore */ }
+})
+
+/* 直接追踪页面进度的好处：滚到底 = 扇形走完全程，不需要再算任何系数 */
+document.getElementById('to-top').addEventListener('click', () => window.scrollTo(0, 0))
+document.getElementById('to-bottom').addEventListener('click', () => {
+  window.scrollTo(0, document.documentElement.scrollHeight)
+})
+
+scroller.addEventListener('scroll', () => requestAnimationFrame(render), { passive: true })
+window.addEventListener('resize', () => render())
+
+buildPool()
+applyDriver()
+render()
+window.scrollTo(0, 900)   // 一进来页面就已经滚下去一点，方便看到跟随效果
+</script>
+</body>
+</html>

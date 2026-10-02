@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  --color-light-background: #fefef1;
+  --color-light-primary: #f0f0fe;
+  --color-light-search: #d8c9b6;
+  --color-light-secondary: #e0e0f0;
+  --color-light-font: #6e6e70;
+  --color-light-font-p: #212122;
+  --color-light-font-h: #000000;
+  --color-light-button: #d6d8b7;
+  --color-light-button-hover: #969780;
+
+  /* TypeDropdown / 筛选栏*/
+  --color-light-menu: #f7f5e6;
+  --color-light-menu-hover: #ebe9d6;
+  --color-light-menu-border: #e0ddc4;
+  --color-light-accent: #7d8065;
+  --text-h1: 2.5rem;
+  --text-h2: 2rem;
+  --text-p: 1rem;
+}
+
+@layer utilities {
+  .text-h1 {
+    font-size: var(--text-h1);
+  }
+  .text-h2 {
+    font-size: var(--text-h2);
+  }
+  .text-p {
+    font-size: var(--text-p);
+  }
+}
+
+@layer base {
+}
+
+@layer components {
+  .btn {
+    @apply transition-all px-4 py-2 bg-light-button text-light-font rounded-2xl hover:bg-light-button-hover hover:cursor-pointer;
+  }
+  .container {
+    @apply transition-all max-w-7xl mx-auto px-4;
+  }
+  .card {
+    @apply transition-all p-4 mt-2 mb-2 hover:cursor-pointer;
+    > h2 {
+      @apply text-light-font-h text-h2 font-extrabold text-lg;
+    }
+    > p {
+      @apply text-light-font-p text-p text-balance text-pretty;
+    }
+  }
+  .right-tab {
+    @apply transition-all relative right-0 top-1/2 -translate-y-1/2;
+  }
+  .doc-link {
+    @apply transition-all hidden md:block text-light-font-p hover:text-light-font-h;
+  }
+}
