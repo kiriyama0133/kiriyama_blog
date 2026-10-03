@@ -25,6 +25,21 @@
 - Prettier 配置在 `prettier.config.mjs`，但仓库现有代码跟它不一致（大量文件 `--check` 不过）；
   **不要随手 `prettier --write`**，会搅出无关 diff。
 
+## 内容路径（@nuxt/content）
+- **path 由 slugify 生成**，会把中文整段删掉（`\w` 不含 CJK）→ 大量中文名文件塌成同一 path
+  （opengel 13 篇 → `/cpp/opengel`；`*C++*` → `/cpp/c++`；`C#的*` → `/csharp/c` …），
+  `.path(x).first()` 于是永远返回第一篇。**新增中文笔记前先确认这里没退化。**
+- 入口：`nuxt.config.ts` 的 `content.build.pathMeta.slugifyOptions.remove`，
+  现在是把 CJK 加回白名单：`/[^\w\s$*_+~.()'"!\-:@\u4e00-\u9fff]+/g`。
+- slugify 的 **charMap 改不掉**（`$`→`dollar`、`元`→`yuan`、`円`→`yen`）：想干净只能改文件名，
+  或给该文件加 `path: /想要的/路径` frontmatter（会覆盖生成的 path）。
+- 中文名笔记重命名时要在文件顶部补 `title: "..."`（**引号必须有**，`#` 在 YAML 里是注释）
+  来保住展示名；`h1` 来自正文的行不受影响。
+- **`route.path` 是 percent-encoded**（中文 `%E4%B8%89`、`+` 变 `%2B`），库里 `path` 是解码原文；
+  `[...slug].vue` 必须先 `decodeURIComponent(route.path)` 再 `queryCollection().path()`。
+- 自检：`.data/content/contents.sqlite` 用 node `--experimental-sqlite` 直读，
+  `SELECT path,title FROM _content_content` 里若出现重复 path 就是这个问题。
+
 ## 组件 / composable 分工
 - 分享：`composables/useShareNote.ts`（Web Share API → 复制链接兜底，自己调 `useNotice`）；
   组件只写 `@click="shareNote"`。
