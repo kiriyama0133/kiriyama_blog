@@ -29,6 +29,9 @@ export default defineNuxtConfig({
       }
     }
   },
+  experimental: {
+    payloadExtraction: false
+  },
   nitro: {
     preset: 'static',
     prerender: {
