@@ -71,3 +71,13 @@
 - `app/components/FanVirtualList.vue`：`useVirtualList` 直线轨道 + 极坐标换算圆心角；
   `driver: 'self' | 'window'`，window 模式取页面进度并要 `overscroll-behavior: auto`，尾部要补容器高的尾巴。
 - 调参用 `demo/fan-list-lab.html`。
+
+## SSG 静态部署（重要）
+- 静态构建必须显式枚举内容路由，否则只预渲染「首页爬到的那几条」：
+  Nitro 的 crawlLinks 种子只有 '/'，而首页 index.vue 用 useInfiniteList（PAGE_SIZE=10），
+  首屏 SSR 只有 10 条链接 → 只产出 11 个页面，其余全部 404。
+- 做法：nuxt.config.ts 的 hooks['nitro:init'] 里注册 nitro.hooks.hook('prerender:routes')，
+  读 .data/content/contents.sqlite 的 _content_content.path 全量 add，并手动 routes.add('/')。
+- 校验：产物 .output/public/_nuxt/builds/meta/<id>.json 里的 prerendered 数量应 = 内容条数 + 1。
+- nginx 的 try_files 回退会把缺失的文档页静默换成首页，
+  所以「显示 404」和「静默停在首页」可能是同一个原因。

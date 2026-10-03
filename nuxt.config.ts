@@ -1,4 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineNuxtConfig({
@@ -19,15 +21,6 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()]
   },
-  // ---------------------------------------------------------------
-  // 路径生成：@nuxt/content 用 slugify 清洗每一段路径，默认规则会把
-  // 非 ASCII（中文）整段删掉、把 $ 映射成 dollar。结果大量文件塌成同一个 path：
-  //   cpp/opengel/三角形绘制.md …资产和模型加载.md(13 篇) → 全是 /cpp/opengel
-  //   cpp/C++的学习笔记.md / C++编译器思考.md / 优雅和正确的使用C++的注释.md → 全是 /cpp/c++
-  //   csharp/C#的多线程.md / c#的流传输文件…md → 全是 /csharp/c
-  // 于是 .path(route.path).first() 永远命中该 path 的第一条。
-  // 这里把 CJK 加回白名单，并去掉真正在 URL 里会出事的字符（# ? % & 空格等）。
-  // ---------------------------------------------------------------
   content: {
     build: {
       pathMeta: {
@@ -36,6 +29,40 @@ export default defineNuxtConfig({
           remove: /[^\w\s$*_+~.()'"!\-:@\u4e00-\u9fff]+/g
         }
       }
+    }
+  },
+  nitro: {
+    preset: 'static',
+    prerender: {
+      crawlLinks: true,
+      routes: ['/'],
+      failOnError: false
+    }
+  },
+  hooks: {
+    // 静态构建靠爬虫只能发现首页 SSR 出的那几条链接，这里把内容库全量灌进预渲染列表。
+    'nitro:init'(nitro) {
+      nitro.hooks.hook('prerender:routes', async (routes) => {
+        routes.add('/')
+
+        const dbFile = resolve(nitro.options.rootDir, '.data/content/contents.sqlite')
+        if (!existsSync(dbFile)) {
+          console.warn(`[prerender] 未找到内容库 ${dbFile}，本次只预渲染静态页`)
+          return
+        }
+        const { createRequire } = await import('node:module')
+        const Database = createRequire(import.meta.url)('better-sqlite3')
+        const db = new Database(dbFile, { readonly: true })
+        try {
+          const rows = db.prepare('SELECT path FROM _content_content').all() as { path: string }[]
+          for (const row of rows) {
+            if (row.path.startsWith('/')) routes.add(row.path)
+          }
+          console.log(`[prerender] 内容库 ${rows.length} 条已全部加入预渲染列表`)
+        } finally {
+          db.close()
+        }
+      })
     }
   },
   devtools: { enabled: true },
