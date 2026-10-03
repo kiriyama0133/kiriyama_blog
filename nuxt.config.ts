@@ -1,5 +1,4 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -46,21 +45,21 @@ export default defineNuxtConfig({
         routes.add('/')
 
         const dbFile = resolve(nitro.options.rootDir, '.data/content/contents.sqlite')
-        if (!existsSync(dbFile)) {
-          console.warn(`[prerender] 未找到内容库 ${dbFile}，本次只预渲染静态页`)
-          return
-        }
-        const { createRequire } = await import('node:module')
-        const Database = createRequire(import.meta.url)('better-sqlite3')
-        const db = new Database(dbFile, { readonly: true })
         try {
-          const rows = db.prepare('SELECT path FROM _content_content').all() as { path: string }[]
-          for (const row of rows) {
-            if (row.path.startsWith('/')) routes.add(row.path)
+          const { createRequire } = await import('node:module')
+          const Database = createRequire(import.meta.url)('better-sqlite3')
+          const db = new Database(dbFile, { readonly: true })
+          try {
+            const rows = db.prepare('SELECT path FROM _content_content').all() as { path: string }[]
+            for (const row of rows) {
+              if (row.path.startsWith('/')) routes.add(row.path)
+            }
+            console.log(`[prerender] 内容路由 +${rows.length}（${dbFile}）`)
+          } finally {
+            db.close()
           }
-          console.log(`[prerender] 内容库 ${rows.length} 条已全部加入预渲染列表`)
-        } finally {
-          db.close()
+        } catch (error) {
+          console.warn(`[prerender] 读不到内容库 ${dbFile}，本次只会预渲染静态页：`, error)
         }
       })
     }
