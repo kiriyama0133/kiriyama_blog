@@ -7,6 +7,8 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+    "deploy": "node scripts/deploy.mjs",
+    "build:deploy": "nuxi generate && node scripts/deploy.mjs",
     "preview": "nuxt preview",
     "prepare": "husky",
     "lint": "eslint .",

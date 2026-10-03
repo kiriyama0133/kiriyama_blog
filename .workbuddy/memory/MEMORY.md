@@ -26,19 +26,22 @@
   **不要随手 `prettier --write`**，会搅出无关 diff。
 
 ## 内容路径（@nuxt/content）
-- **path 由 slugify 生成**，会把中文整段删掉（`\w` 不含 CJK）→ 大量中文名文件塌成同一 path
-  （opengel 13 篇 → `/cpp/opengel`；`*C++*` → `/cpp/c++`；`C#的*` → `/csharp/c` …），
-  `.path(x).first()` 于是永远返回第一篇。**新增中文笔记前先确认这里没退化。**
-- 入口：`nuxt.config.ts` 的 `content.build.pathMeta.slugifyOptions.remove`，
-  现在是把 CJK 加回白名单：`/[^\w\s$*_+~.()'"!\-:@\u4e00-\u9fff]+/g`。
-- slugify 的 **charMap 改不掉**（`$`→`dollar`、`元`→`yuan`、`円`→`yen`）：想干净只能改文件名，
-  或给该文件加 `path: /想要的/路径` frontmatter（会覆盖生成的 path）。
-- 中文名笔记重命名时要在文件顶部补 `title: "..."`（**引号必须有**，`#` 在 YAML 里是注释）
-  来保住展示名；`h1` 来自正文的行不受影响。
-- **`route.path` 是 percent-encoded**（中文 `%E4%B8%89`、`+` 变 `%2B`），库里 `path` 是解码原文；
-  `[...slug].vue` 必须先 `decodeURIComponent(route.path)` 再 `queryCollection().path()`。
-- 自检：`.data/content/contents.sqlite` 用 node `--experimental-sqlite` 直读，
-  `SELECT path,title FROM _content_content` 里若出现重复 path 就是这个问题。
+- **path 现在由 `modules/content-path-preserve.ts` 用「文件自身路径」写死**：在 `content:file:beforeParse`
+  里往 frontmatter 注入 `path:`。原先靠 `content.build.pathMeta.slugifyOptions.remove` 保中文，那条配置已删。
+- **钩子位置是最大的坑**：`content:file:beforeParse` / `content:file:afterParse` 由 @nuxt/content 走
+  `nuxt.callHook(...)` 触发，是**构建期 Nuxt 钩子**，不是 Nitro 运行时钩子 ——
+  写在 `server/plugins/*.ts` 的 `defineNitroPlugin` **永远不会被调用**，必须放 `modules/`（Nuxt 自动加载、
+  且 `.nuxt/tsconfig.node.json` 的 include 已含 `modules/**`）。不要 import `@nuxt/kit` 之外的东西。
+- **v3 的 frontmatter 字段是 `path`**（v2 才叫 `_path`）；pathMeta 里 `...content` 展开在计算之后，
+  所以 frontmatter 的 `path` / `title` 天然优先，插件只补「没写 path」的文件（用 `^[ \t]*path[ \t]*:` 判断）。
+- 钩子参数里 `file.path` 是**绝对文件路径**，`file.id` 才是 `content/cpp/opengel/光照.md` 这种键 —— 用 `file.id`。
+- **逐字路径的代价**：大小写、空格、`+` 全保留 ⇒ 109/134 条 URL 与旧 slugify 形态不同
+  （`/vue/nuxt/nuxt4` → `/Vue/Nuxt/Nuxt4`，`/cpp/boost/cpp-boost` → `/cpp/boost/C++ Boost`）。
+  想回到旧形态：删掉该模块 + 把 `pathMeta.slugifyOptions.remove` 加回 nuxt.config.ts。
+- 文件名里别出现 `#`、`?`、`%`（破坏 URL/YAML）；`C#的多线程.md` → `CSharp的多线程.md` 这类重命名仍然必要。
+- 自检：`.data/content/contents.sqlite` → `SELECT id,path,title FROM _content_content`：
+  行数 = md 文件数、path 无重复、且 `path = '/' + id.slice('content/'.length, -3)`。
+- **`route.path` 是 percent-encoded**（中文 `%E4%B8%89`、`+` 变 `%2B`），库里是解码原文 —— 见下面「URL / 路径约定」。
 
 ## 组件 / composable 分工
 - 分享：`composables/useShareNote.ts`（Web Share API → 复制链接兜底，自己调 `useNotice`）；
@@ -77,7 +80,9 @@
   `nuxt.config.ts` 只需要 `nitro: { preset: 'static', prerender: { crawlLinks: true, routes: ['/'], failOnError: false } }`。
 - **不要再引入读 sqlite 的 `prerender:routes` 钩子**：那是「首页只 SSR 10 条链接」时的补丁，
   分页去掉后纯属多余，还额外要求 better-sqlite3 原生模块可用。只有首页重新加回分页时才会再次需要。
-- 校验：产物 `.output/public/_nuxt/builds/meta/<id>.json` 里的 prerendered 数量应 = 内容条数 + 1。
+- **别用 `meta/<id>.json` 的 `prerendered` 数组校验**：它只记录「显式 add 进列表的路由」，
+  crawlLinks 抓来的不计入 —— 线上现状是 `prerendered: []` 而 134 个文档页都是好的。
+  校验改看产物目录里有没有 `xxx/index.html`，或线上抽查文档页的 `<title>` 是否等于首页标题（等于 = 回退）。
 - 爬虫会从正文里抓出伪路由（如 `/vue/目录`、裸 `<router-link>`）报 404，`failOnError: false` 下不阻塞，属噪音。
 
 ## URL / 路径约定

@@ -19,6 +19,17 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()]
   },
+  content: {
+    build: {
+      pathMeta: {
+        // slugify 默认把中文整段删掉（\w 不含 CJK），补进白名单。
+        slugifyOptions: {
+          lower: true,
+          remove: /[^\w\s$*_+~.()'"!\-:@\u4e00-\u9fff]+/g
+        }
+      }
+    }
+  },
   experimental: {
     payloadExtraction: false
   },
