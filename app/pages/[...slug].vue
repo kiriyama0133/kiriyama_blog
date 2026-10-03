@@ -7,21 +7,18 @@ import { pageTitle } from '~/utils/site'
 const route = useRoute()
 const reader = useReaderStore()
 
-/**
- * vue-router 的 route.path 是 percent-encoded（中文会变成 %E4%B8%89…，
- * `+` 变成 %2B），而 @nuxt/content 库里存的 path 是解码后的原文，
- * 直接拿 route.path 去匹配只有纯 ASCII 路径能撞对，含中文/特殊字符的一律 404。
- * 所以查询前先把路径解码回原文。
- */
-function decodePath(path: string) {
+// route.path 是 percent-encoded、可能带尾斜杠；内容库里是解码原文且无尾斜杠。
+function normalizePath(path: string) {
+  let decoded = path
   try {
-    return decodeURIComponent(path)
+    decoded = decodeURIComponent(path)
   } catch {
-    return path
+    decoded = path
   }
+  return decoded.length > 1 ? decoded.replace(/\/+$/, '') : decoded
 }
 
-const contentPath = decodePath(route.path)
+const contentPath = normalizePath(route.path)
 
 const { data: page } = await useAsyncData('page-' + contentPath, () => {
   return queryCollection('content').path(contentPath).first()

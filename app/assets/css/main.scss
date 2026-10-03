@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 $color-light-background: #fefef1;
 $color-light-primary: #f0f0fe;
 $color-light-secondary: #e0e0f0;
@@ -171,7 +173,7 @@ $font-mono:
         text-decoration-color 0.2s;
 
       &:hover {
-        color: darken($color-light-link, 8%);
+        color: color.adjust($color-light-link, $lightness: -8%);
         text-decoration-color: currentColor;
       }
     }
@@ -332,7 +334,7 @@ $font-mono:
       text-decoration-color: rgba($color-dark-link, 0.45);
 
       &:hover {
-        color: lighten($color-dark-link, 8%);
+        color: color.adjust($color-dark-link, $lightness: 8%);
       }
     }
 
