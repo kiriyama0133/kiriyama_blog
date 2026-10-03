@@ -4,10 +4,7 @@ import { useContentStore } from '~/stores/content'
 import BlogCard from '~/components/BlogCard.vue'
 import Search from '~/components/Search.vue'
 import TypeDropdown from '~/components/TypeDropdown.vue'
-import SpinCircle from '~/components/SpinCircle.vue'
 import { SITE_DESCRIPTION, pageTitle } from '~/utils/site'
-
-const PAGE_SIZE = 10
 
 const store = useContentStore()
 
@@ -20,11 +17,6 @@ watchEffect(() => {
     store.setDocuments(pages.value)
   }
 })
-
-const { sentinel, visibleItems, hasMore, loadingMore, total } = useInfiniteList(
-  computed(() => store.filteredSummaries),
-  { pageSize: PAGE_SIZE }
-)
 
 // 列表页只有站点名，不挂「· 站点名」尾巴
 useSeoMeta({
@@ -62,7 +54,7 @@ definePageMeta({
         <span v-else>共 {{ store.totalCount }} 篇文档</span>
       </p>
 
-      <BlogCard v-for="item in visibleItems" :key="item.path" :path="item.path">
+      <BlogCard v-for="item in store.filteredSummaries" :key="item.path" :path="item.path">
         <template #title>{{ item.title }}</template>
         <template #summary>{{ item.description }}</template>
       </BlogCard>
@@ -73,17 +65,6 @@ definePageMeta({
       >
         没有匹配的文档，换个关键词或类型试试。
       </p>
-
-      <!-- 滚到底的哨兵；加载动画 / 到底提示都挂在这儿 -->
-      <div ref="sentinel" class="list-foot">
-        <SpinCircle v-if="loadingMore" />
-        <span
-          v-else-if="!hasMore && total > PAGE_SIZE"
-          class="list-foot__end text-light-font dark:text-dark-font"
-        >
-          没有更多了
-        </span>
-      </div>
     </div>
   </div>
 </template>
@@ -128,7 +109,7 @@ $filter-bar-h: 4rem;
 
 // 给固定条让位
 .index-body {
-  padding-top: calc(#{$filter-bar-h} + 1.25rem);
+  padding-block: calc(#{$filter-bar-h} + 1.25rem) 3rem;
 }
 
 .filter-meta {
@@ -143,18 +124,5 @@ $filter-bar-h: 4rem;
   padding: 2rem 0;
   text-align: center;
   font-size: 0.875rem;
-}
-
-// 哨兵：始终占位（观察器需要它一直在 DOM 里），居中放 spinner / 到底提示
-.list-foot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 3.5rem;
-  padding: 1rem 0 2rem;
-}
-
-.list-foot__end {
-  font-size: 0.8125rem;
 }
 </style>

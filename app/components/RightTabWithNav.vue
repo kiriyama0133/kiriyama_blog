@@ -5,14 +5,18 @@ import { computed } from 'vue'
 import { useContentStore } from '~/stores/content'
 import FanVirtualList from '~/components/FanVirtualList.vue'
 import RightRail from '~/components/RightRail.vue'
+import { canonicalPath } from '~/utils/path'
 
 const store = useContentStore()
 const route = useRoute()
 
 const items = computed(() => store.summaries)
 
+// route.path 带编码和尾斜杠，item.path 是解码原文，先规范再比
+const currentPath = computed(() => canonicalPath(route.path))
+
 function isActive(path: string) {
-  return route.path === path
+  return currentPath.value === path
 }
 </script>
 

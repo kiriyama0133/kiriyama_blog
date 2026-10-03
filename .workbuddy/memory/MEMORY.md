@@ -73,11 +73,17 @@
 - 调参用 `demo/fan-list-lab.html`。
 
 ## SSG 静态部署（重要）
-- 静态构建必须显式枚举内容路由，否则只预渲染「首页爬到的那几条」：
-  Nitro 的 crawlLinks 种子只有 '/'，而首页 index.vue 用 useInfiniteList（PAGE_SIZE=10），
-  首屏 SSR 只有 10 条链接 → 只产出 11 个页面，其余全部 404。
-- 做法：nuxt.config.ts 的 hooks['nitro:init'] 里注册 nitro.hooks.hook('prerender:routes')，
-  读 .data/content/contents.sqlite 的 _content_content.path 全量 add，并手动 routes.add('/')。
-- 校验：产物 .output/public/_nuxt/builds/meta/<id>.json 里的 prerendered 数量应 = 内容条数 + 1。
-- nginx 的 try_files 回退会把缺失的文档页静默换成首页，
-  所以「显示 404」和「静默停在首页」可能是同一个原因。
+- 首页 `index.vue` 直接渲染全部文章（**无分页**）→ 首屏 SSR 输出全部文档链接 → Nitro `crawlLinks` 从 `/` 就能爬全，
+  `nuxt.config.ts` 只需要 `nitro: { preset: 'static', prerender: { crawlLinks: true, routes: ['/'], failOnError: false } }`。
+- **不要再引入读 sqlite 的 `prerender:routes` 钩子**：那是「首页只 SSR 10 条链接」时的补丁，
+  分页去掉后纯属多余，还额外要求 better-sqlite3 原生模块可用。只有首页重新加回分页时才会再次需要。
+- 校验：产物 `.output/public/_nuxt/builds/meta/<id>.json` 里的 prerendered 数量应 = 内容条数 + 1。
+- 爬虫会从正文里抓出伪路由（如 `/vue/目录`、裸 `<router-link>`）报 404，`failOnError: false` 下不阻塞，属噪音。
+
+## URL / 路径约定
+- 比较或查询路径前一律过 `app/utils/path.ts` 的 `canonicalPath()`（解码 + 去尾斜杠）：
+  `route.path/fullPath` 是 percent-encoded，内容库与 `item.path` 是解码原文。
+  已用在：`[...slug].vue` 内容查询与 reader.path、`RightTabWithNav` 的 isActive、导航栈中间件。
+- **禁止在 app 侧对尾斜杠做重定向**去「修正」地址栏：nginx 会 301 补斜杠，app 再 301 去掉 = 死循环。
+- Nitro 静态产物是 `xxx/index.html`，所以 `/xxx` 会被 nginx 目录索引 301 成 `/xxx/`，属机制行为。
+

@@ -3,22 +3,13 @@ import { computed, watch } from 'vue'
 import type { TocTree } from '~/stores/reader'
 import { useReaderStore } from '~/stores/reader'
 import { pageTitle } from '~/utils/site'
+import { canonicalPath } from '~/utils/path'
 
 const route = useRoute()
 const reader = useReaderStore()
 
-// route.path 是 percent-encoded、可能带尾斜杠；内容库里是解码原文且无尾斜杠。
-function normalizePath(path: string) {
-  let decoded = path
-  try {
-    decoded = decodeURIComponent(path)
-  } catch {
-    decoded = path
-  }
-  return decoded.length > 1 ? decoded.replace(/\/+$/, '') : decoded
-}
-
-const contentPath = normalizePath(route.path)
+// 内容库里的 path 是解码原文且无尾斜杠，route.path 可能两者都不是
+const contentPath = canonicalPath(route.path)
 
 const { data: page } = await useAsyncData('page-' + contentPath, () => {
   return queryCollection('content').path(contentPath).first()
@@ -57,7 +48,7 @@ watch(
   article,
   (value) => {
     reader.setArticle({
-      path: route.path,
+      path: contentPath,
       title: value?.title,
       description: value?.description,
       toc: value?.body?.toc ?? null
