@@ -26,21 +26,16 @@
   **不要随手 `prettier --write`**，会搅出无关 diff。
 
 ## 内容路径（@nuxt/content）
-- **path 现在由 `modules/content-path-preserve.ts` 用「文件自身路径」写死**：在 `content:file:beforeParse`
-  里往 frontmatter 注入 `path:`。原先靠 `content.build.pathMeta.slugifyOptions.remove` 保中文，那条配置已删。
-- **钩子位置是最大的坑**：`content:file:beforeParse` / `content:file:afterParse` 由 @nuxt/content 走
-  `nuxt.callHook(...)` 触发，是**构建期 Nuxt 钩子**，不是 Nitro 运行时钩子 ——
-  写在 `server/plugins/*.ts` 的 `defineNitroPlugin` **永远不会被调用**，必须放 `modules/`（Nuxt 自动加载、
-  且 `.nuxt/tsconfig.node.json` 的 include 已含 `modules/**`）。不要 import `@nuxt/kit` 之外的东西。
-- **v3 的 frontmatter 字段是 `path`**（v2 才叫 `_path`）；pathMeta 里 `...content` 展开在计算之后，
-  所以 frontmatter 的 `path` / `title` 天然优先，插件只补「没写 path」的文件（用 `^[ \t]*path[ \t]*:` 判断）。
-- 钩子参数里 `file.path` 是**绝对文件路径**，`file.id` 才是 `content/cpp/opengel/光照.md` 这种键 —— 用 `file.id`。
-- **逐字路径的代价**：大小写、空格、`+` 全保留 ⇒ 109/134 条 URL 与旧 slugify 形态不同
-  （`/vue/nuxt/nuxt4` → `/Vue/Nuxt/Nuxt4`，`/cpp/boost/cpp-boost` → `/cpp/boost/C++ Boost`）。
-  想回到旧形态：删掉该模块 + 把 `pathMeta.slugifyOptions.remove` 加回 nuxt.config.ts。
+- **path 由 slugify 生成，配置就写在 `nuxt.config.ts` 的 `content.build.pathMeta.slugifyOptions`**：
+  `{ lower: true, remove: /[^\w\s$*_+~.()'"!\-:@\u4e00-\u9fff]+/g }`（把 CJK 加回白名单，否则中文整段被删、
+  大量文档塌成同一个 path）。`modules/content-path-preserve.ts` 那套「逐字路径」方案**已删除、不要再加回来**
+  ——它会把 `#`、空格带回 URL（`/csharp/C#的多线程` 里的 `#` 变成锚点，点下去落首页）。
+- 若要写 `content:file:beforeParse` 之类钩子：那是**构建期 Nuxt 钩子**（`nuxt.callHook`），
+  必须放 `modules/`，写在 `server/plugins/*.ts` 的 `defineNitroPlugin` 里永远不会被调用。
+  v3 的 frontmatter 字段是 `path`（v2 才是 `_path`）。
 - 文件名里别出现 `#`、`?`、`%`（破坏 URL/YAML）；`C#的多线程.md` → `CSharp的多线程.md` 这类重命名仍然必要。
-- 自检：`.data/content/contents.sqlite` → `SELECT id,path,title FROM _content_content`：
-  行数 = md 文件数、path 无重复、且 `path = '/' + id.slice('content/'.length, -3)`。
+- 自检：`.data/content/contents.sqlite` → `SELECT path,title FROM _content_content`：
+  行数 = md 文件数、**path 无重复**（重复 = slugify 又塌陷了）。
 - **`route.path` 是 percent-encoded**（中文 `%E4%B8%89`、`+` 变 `%2B`），库里是解码原文 —— 见下面「URL / 路径约定」。
 
 ## 组件 / composable 分工
@@ -84,6 +79,16 @@
   crawlLinks 抓来的不计入 —— 线上现状是 `prerendered: []` 而 134 个文档页都是好的。
   校验改看产物目录里有没有 `xxx/index.html`，或线上抽查文档页的 `<title>` 是否等于首页标题（等于 = 回退）。
 - 爬虫会从正文里抓出伪路由（如 `/vue/目录`、裸 `<router-link>`）报 404，`failOnError: false` 下不阻塞，属噪音。
+  ⚠️ 同一开关也会让「预渲染失败」静默吞掉，旧产物文件继续留在服务器 → 排查线上怪现象时先怀疑这个。
+- **`experimental.payloadExtraction` 必须保持默认（true），不要写 `false`**：
+  关掉后客户端导航没有 `_payload.json` 可读，会在浏览器里重跑 `queryCollection` → 去下载
+  `/__nuxt_content/content/sql_dump.txt`（WASM sqlite）。那份 dump 一旦和线上页面/JS 不是同一次构建
+  （残留、没覆盖），**链接是对的但点进去 404，刷新又正常**——2026-10-03 那次故障就是这个。
+  开着 = 每篇文档的数据预渲染成同目录 `_payload.json`，URL 与数据同源同一次构建，客户端也不再下载那份库。
+- 定位「URL 对但导航 404」的固定套路：① 抓首页 HTML 的 `<a href>` 看链接对不对；
+  ② 下载 `/__nuxt_content/content/sql_dump.txt`（base64+gzip 后是 JSON 化的 SQL 语句数组）解析 `_content_content`
+  的 `path` 列，和 href 对差集；③ 比 dump 里 `checksum_content` 与页面 JS 里的 `checksums.content`
+  （或 `.nuxt/content/manifest.ts`）——**不等即非同一次构建**。
 
 ## URL / 路径约定
 - 比较或查询路径前一律过 `app/utils/path.ts` 的 `canonicalPath()`（解码 + 去尾斜杠）：
