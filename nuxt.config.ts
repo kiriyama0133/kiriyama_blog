@@ -19,16 +19,6 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()]
   },
-  content: {
-    build: {
-      pathMeta: {
-        slugifyOptions: {
-          lower: true,
-          remove: /[^\w\s$*_+~.()'"!\-:@\u4e00-\u9fff]+/g
-        }
-      }
-    }
-  },
   experimental: {
     payloadExtraction: false
   },
