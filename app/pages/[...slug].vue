@@ -15,8 +15,16 @@ const { data: page } = await useAsyncData('page-' + contentPath, () => {
   return queryCollection('content').path(contentPath).first()
 })
 
-if (!page.value) {
+// 文档页是预渲染的，数据随页面从 _payload.json 来；取不到就先整页请求一次真实 HTML，别直接甩 404。
+const reloadKey = 'slug-reload:' + contentPath
+
+if (page.value) {
+  if (import.meta.client) sessionStorage.removeItem(reloadKey)
+} else if (import.meta.server || sessionStorage.getItem(reloadKey)) {
   throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+} else {
+  sessionStorage.setItem(reloadKey, '1')
+  window.location.replace(route.fullPath)
 }
 
 interface Article {
