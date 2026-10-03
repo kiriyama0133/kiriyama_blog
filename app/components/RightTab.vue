@@ -37,18 +37,8 @@ const thumbStyle = computed(() => ({
   <div class="right-tab">
     <div class="flex flex-wrap h-30">
       <svg width="20" height="100%" viewBox="0 0 60 400">
-        <path
-          ref="trackRef"
-          :d="pathD"
-          fill="none"
-          class="track"
-        />
-        <path
-          :d="pathD"
-          fill="none"
-          class="thumb"
-          :style="thumbStyle"
-        />
+        <path ref="trackRef" :d="pathD" fill="none" class="track" />
+        <path :d="pathD" fill="none" class="thumb" :style="thumbStyle" />
       </svg>
     </div>
   </div>
@@ -56,13 +46,14 @@ const thumbStyle = computed(() => ({
 
 <style lang="scss" scoped>
 .track {
-  stroke: #0f1522;
+  /* 语义变量：亮色是深藏蓝，暗色换成浅一档的冷灰紫，不然在暗底上看不见 */
+  stroke: var(--ui-rail-track);
   stroke-width: 12px;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 .thumb {
-  stroke: #c8ee8c9f;
+  stroke: var(--ui-rail-thumb);
   stroke-width: 12px;
   stroke-linecap: round;
   stroke-linejoin: round;

@@ -29,9 +29,9 @@ withDefaults(
     maxAngle: 48,
     fade: 0.2,
     orientation: 'tangent',
-    anchorX: 0.70,
-    anchorY: 0.5,
-  },
+    anchorX: 0.7,
+    anchorY: 0.5
+  }
 )
 
 const reader = useReaderStore()
@@ -94,17 +94,20 @@ function onPick(id: string, index: number) {
   border: 1px solid transparent;
   border-radius: 0.5rem;
   background-color: transparent;
-  color: var(--color-light-font-p);
+  /* 用 main.css 的语义变量，跟着 .dark 自己翻（@theme 的变量是按需输出的，别直接用） */
+  color: var(--ui-text);
   font-size: 0.8125rem;
   line-height: 1.1rem;
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: pointer;
-  transition: color 0.2s, box-shadow 0.2s;
+  transition:
+    color 0.2s,
+    box-shadow 0.2s;
 
   &:hover {
-    color: var(--color-light-font-h);
+    color: var(--ui-text-strong);
   }
 }
 
@@ -115,7 +118,7 @@ function onPick(id: string, index: number) {
 
 // 当前正在阅读的章节
 .toc-link--active {
-  color: var(--color-light-font-h);
+  color: var(--ui-text-strong);
   font-weight: 600;
 }
 

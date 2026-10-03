@@ -48,12 +48,12 @@ definePageMeta({
     </header>
 
     <div class="container index-body">
-      <p class="filter-meta text-light-font">
+      <p class="filter-meta text-light-font dark:text-dark-font">
         <span v-if="store.hasFilters">
           筛选出 {{ store.filteredCount }} / {{ store.totalCount }} 篇
           <button
             type="button"
-            class="filter-reset cursor-pointer text-light-accent underline hover:text-light-font-h"
+            class="filter-reset cursor-pointer text-light-accent underline hover:text-light-font-h dark:text-dark-accent dark:hover:text-dark-font-h"
             @click="store.clearFilters()"
           >
             清除筛选
@@ -67,14 +67,20 @@ definePageMeta({
         <template #summary>{{ item.description }}</template>
       </BlogCard>
 
-      <p v-if="store.hasFilters && !store.filteredCount" class="empty text-light-font">
+      <p
+        v-if="store.hasFilters && !store.filteredCount"
+        class="empty text-light-font dark:text-dark-font"
+      >
         没有匹配的文档，换个关键词或类型试试。
       </p>
 
       <!-- 滚到底的哨兵；加载动画 / 到底提示都挂在这儿 -->
       <div ref="sentinel" class="list-foot">
         <SpinCircle v-if="loadingMore" />
-        <span v-else-if="!hasMore && total > PAGE_SIZE" class="list-foot__end text-light-font">
+        <span
+          v-else-if="!hasMore && total > PAGE_SIZE"
+          class="list-foot__end text-light-font dark:text-dark-font"
+        >
           没有更多了
         </span>
       </div>
@@ -91,7 +97,8 @@ $filter-bar-h: 4rem;
   inset: 0 0 auto 0;
   z-index: 50;
   padding-block: 0.75rem;
-  background-color: rgba(254, 254, 241, 0.72);
+  /* 半透明底跟着主题翻（main.css 的 --ui-backdrop） */
+  background-color: var(--ui-backdrop);
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
 
@@ -104,7 +111,7 @@ $filter-bar-h: 4rem;
     right: 0;
     height: 1.25rem;
     pointer-events: none;
-    background: linear-gradient(to bottom, rgba(254, 254, 241, 0.72), rgba(254, 254, 241, 0));
+    background: linear-gradient(to bottom, var(--ui-backdrop), transparent);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     -webkit-mask-image: linear-gradient(to bottom, #000, transparent);

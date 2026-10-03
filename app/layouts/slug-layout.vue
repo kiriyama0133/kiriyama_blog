@@ -2,6 +2,7 @@
 import { onUnmounted } from 'vue'
 import RightRail from '~/components/RightRail.vue'
 import TocFanNav from '~/components/TocFanNav.vue'
+import FloatingMenu from '~/components/FloatingMenu.vue'
 import { useReaderStore } from '~/stores/reader'
 
 const reader = useReaderStore()
@@ -11,6 +12,7 @@ onUnmounted(() => reader.clear())
 
 <template>
   <div class="layout">
+    <FloatingMenu />
     <main class="layout-main">
       <slot />
     </main>

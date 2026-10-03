@@ -1,202 +1,383 @@
-$color-light-background: #FEFEF1;
-$color-light-primary: #F0F0FE;
-$color-light-secondary: #E0E0F0;
-$color-light-font: #6E6E70;
+$color-light-background: #fefef1;
+$color-light-primary: #f0f0fe;
+$color-light-secondary: #e0e0f0;
+$color-light-font: #6e6e70;
 $color-light-font-p: #212122;
 $color-light-font-h: #000000;
 
 // 正文附加色
 $color-light-link: #3b6bd6;
-$color-light-code-bg: #f6f8fa;        // 必须偏亮：shiki 用的是 github-light 亮色 token
+$color-light-code-bg: #f6f8fa;
 $color-light-code-inline-bg: #f0f0fe;
 $color-light-code-inline-text: #b03a5b;
+$color-light-mark: #fff3b0;
 
-// 字体栈：正文 = 无衬线 + 中文回退；代码 = 等宽。都是系统栈，无需外链字体。
-$font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
-$font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, SFMono-Regular,
-    'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+// ---- 暗色：色相不变 · 翻明度 · 降纯度 ----
+// 与 main.css 的 @theme --color-dark-* / .dark --ui-* 同值，改色要几处一起改。
+// 暖黄(背景 53°) → 冷紫(表面 240°) → 橄榄(按钮 70°) → 暖褐(搜索 32°)，和亮色是同一套关系。
+$color-dark-background: #1b1a13;
+$color-dark-primary: #24242f;
+$color-dark-secondary: #38384a;
+$color-dark-font: #9b9ba8;
+$color-dark-font-p: #e3e3ea;
+$color-dark-font-h: #fdfdf7;
+
+$color-dark-link: #8faaf0;
+$color-dark-code-bg: #1f1f29; // 暗色 shiki token 是 github-dark，底色跟着同区间
+$color-dark-code-inline-bg: #2a2a3a;
+$color-dark-code-inline-text: #f0a0bc;
+$color-dark-mark: #4a421c;
+
+// 字体栈：正文 = 无衬线 + 中文回退
+$font-sans:
+  'Inter',
+  -apple-system,
+  BlinkMacSystemFont,
+  'Segoe UI',
+  'PingFang SC',
+  'Hiragino Sans GB',
+  'Microsoft YaHei',
+  'Noto Sans SC',
+  sans-serif;
+$font-mono:
+  'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, SFMono-Regular, 'SF Mono', Menlo,
+  Consolas, 'Liberation Mono', monospace;
 
 @layer base {
-    html {
-        font-family: $font-sans;
-        font-size: 16px;
-        line-height: 1.7;
-        color: $color-light-font-p;
-        background-color: $color-light-background;
-        margin: 0;
-        padding: 0;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-rendering: optimizeLegibility;
+  html {
+    font-family: $font-sans;
+    font-size: 16px;
+    line-height: 1.7;
+    color: $color-light-font-p;
+    background-color: $color-light-background;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  p {
+    font-size: 1rem;
+    color: $color-light-font-p;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    font-size: 2rem;
+    color: $color-light-font-h;
+    margin: 10px;
+    padding: 2px;
+  }
+  h2 {
+    font-size: 1.5rem;
+    margin: 8px;
+    padding: 2px;
+  }
+
+  :is(h1, h2, h3, h4)[id] {
+    scroll-margin-top: 1.5rem;
+  }
+
+  /* ---------------- 暗色：基础排版 ---------------- */
+  html.dark {
+    color: $color-dark-font-p;
+    background-color: $color-dark-background;
+  }
+  .dark p {
+    color: $color-dark-font-p;
+  }
+  .dark h1 {
+    color: $color-dark-font-h;
+  }
+
+  .markdown-body {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: $color-light-font-p;
+
+    > :first-child {
+      margin-top: 0;
+    }
+    > :last-child {
+      margin-bottom: 0;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin: 2rem 0 0.85rem;
+      padding: 0;
+      color: $color-light-font-h;
+      font-weight: 700;
+      line-height: 1.3;
+      scroll-margin-top: 1.5rem;
+    }
+    h1 {
+      font-size: 2rem;
+    }
+    h2 {
+      margin-top: 2.4rem;
+      padding-bottom: 0.35rem;
+      font-size: 1.5rem;
+      border-bottom: 1px solid $color-light-secondary;
+    }
+    h3 {
+      font-size: 1.25rem;
+    }
+    h4 {
+      font-size: 1.1rem;
+    }
+    h5 {
+      font-size: 1rem;
+    }
+    h6 {
+      font-size: 0.875rem;
+      color: $color-light-font;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
 
     p {
-        font-size: 1rem;
-        color: $color-light-font-p;
-        margin: 0;
-        padding: 0;
+      margin: 0 0 1.1rem;
     }
-    h1 {
-        font-size: 2rem;
-        color: $color-light-font-h;
-        margin: 10px;
-        padding: 2px;
+    strong {
+      color: $color-light-font-h;
+      font-weight: 600;
+    }
+    em {
+      font-style: italic;
+    }
+    del {
+      color: $color-light-font;
+    }
+    mark {
+      background: #fff3b0;
+      padding: 0 0.2em;
+      border-radius: 0.2em;
+    }
+
+    a {
+      color: $color-light-link;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: rgba($color-light-link, 0.4);
+      text-underline-offset: 0.2em;
+      transition:
+        color 0.2s,
+        text-decoration-color 0.2s;
+
+      &:hover {
+        color: darken($color-light-link, 8%);
+        text-decoration-color: currentColor;
+      }
+    }
+
+    ul,
+    ol {
+      margin: 0 0 1.1rem;
+      padding-left: 1.5rem;
+    }
+    ul {
+      list-style: disc;
+    }
+    ol {
+      list-style: decimal;
+    }
+    li {
+      margin: 0.35rem 0;
+    }
+    li::marker {
+      color: $color-light-font;
+    }
+    li > ul,
+    li > ol {
+      margin: 0.35rem 0 0;
+    }
+    li.task-list-item {
+      list-style: none;
+      margin-left: -1.1rem;
+    }
+    li.task-list-item input {
+      margin-right: 0.5rem;
+    }
+
+    blockquote {
+      margin: 0 0 1.1rem;
+      padding: 0.5rem 1rem;
+      border-left: 3px solid $color-light-secondary;
+      border-radius: 0 0.5rem 0.5rem 0;
+      background: rgba($color-light-primary, 0.6);
+      color: $color-light-font;
+
+      > :last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    /* ----- 分隔线 ----- */
+    hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid $color-light-secondary;
+    }
+
+    /* ----- 图片 ----- */
+    img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 1.25rem auto;
+      border-radius: 0.5rem;
+    }
+
+    /* ----- 表格 ----- */
+    table {
+      display: block;
+      width: 100%;
+      margin: 1.25rem 0;
+      overflow-x: auto;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th,
+    td {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid $color-light-secondary;
+      text-align: left;
+    }
+    th {
+      background: $color-light-primary;
+      color: $color-light-font-h;
+      font-weight: 600;
+    }
+    tbody tr:nth-child(even) {
+      background: rgba($color-light-secondary, 0.25);
+    }
+
+    /* ----- 行内代码 -----*/
+    :not(pre) > code {
+      font-family: $font-mono;
+      font-size: 0.875em;
+      padding: 0.15em 0.4em;
+      border-radius: 0.375rem;
+      background-color: $color-light-code-inline-bg;
+      color: $color-light-code-inline-text;
+      white-space: break-spaces;
+    }
+
+    /* ----- 代码块 -----*/
+    pre {
+      margin: 1.25rem 0;
+      padding: 1rem 1.25rem;
+      border: 1px solid $color-light-secondary;
+      border-radius: 0.75rem;
+      background-color: $color-light-code-bg;
+      font-family: $font-mono;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+
+      code {
+        display: block;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: $color-light-font-p;
+        font: inherit;
+        white-space: pre;
+      }
+      .line {
+        display: block;
+      }
+    }
+  }
+
+  /* ---------------- 暗色：正文 ----------------
+       只换色，间距 / 字号一律沿用上面那套，避免两套排版各写一遍 */
+  .dark .markdown-body {
+    color: $color-dark-font-p;
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      color: $color-dark-font-h;
     }
     h2 {
-        font-size: 1.5rem;
-        margin: 8px;
-        padding: 2px;
+      border-bottom-color: $color-dark-secondary;
+    }
+    h6 {
+      color: $color-dark-font;
     }
 
-    :is(h1, h2, h3, h4)[id] {
-        scroll-margin-top: 1.5rem;
+    strong {
+      color: $color-dark-font-h;
+    }
+    del {
+      color: $color-dark-font;
+    }
+    mark {
+      background: $color-dark-mark;
     }
 
-    .markdown-body {
-        font-size: 1rem;
-        line-height: 1.75;
-        color: $color-light-font-p;
+    a {
+      color: $color-dark-link;
+      text-decoration-color: rgba($color-dark-link, 0.45);
 
-        > :first-child { margin-top: 0; }
-        > :last-child { margin-bottom: 0; }
-
-        h1, h2, h3, h4, h5, h6 {
-            margin: 2rem 0 0.85rem;
-            padding: 0;
-            color: $color-light-font-h;
-            font-weight: 700;
-            line-height: 1.3;
-            scroll-margin-top: 1.5rem;
-        }
-        h1 { font-size: 2rem; }
-        h2 {
-            margin-top: 2.4rem;
-            padding-bottom: 0.35rem;
-            font-size: 1.5rem;
-            border-bottom: 1px solid $color-light-secondary;
-        }
-        h3 { font-size: 1.25rem; }
-        h4 { font-size: 1.1rem; }
-        h5 { font-size: 1rem; }
-        h6 {
-            font-size: 0.875rem;
-            color: $color-light-font;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
-
-        p { margin: 0 0 1.1rem; }
-        strong { color: $color-light-font-h; font-weight: 600; }
-        em { font-style: italic; }
-        del { color: $color-light-font; }
-        mark { background: #fff3b0; padding: 0 0.2em; border-radius: 0.2em; }
-
-        a {
-            color: $color-light-link;
-            text-decoration: underline;
-            text-decoration-thickness: 1px;
-            text-decoration-color: rgba($color-light-link, 0.4);
-            text-underline-offset: 0.2em;
-            transition: color 0.2s, text-decoration-color 0.2s;
-
-            &:hover {
-                color: darken($color-light-link, 8%);
-                text-decoration-color: currentColor;
-            }
-        }
-
-        ul, ol { margin: 0 0 1.1rem; padding-left: 1.5rem; }
-        ul { list-style: disc; }
-        ol { list-style: decimal; }
-        li { margin: 0.35rem 0; }
-        li::marker { color: $color-light-font; }
-        li > ul, li > ol { margin: 0.35rem 0 0; }
-        li.task-list-item { list-style: none; margin-left: -1.1rem; }
-        li.task-list-item input { margin-right: 0.5rem; }
-
-        blockquote {
-            margin: 0 0 1.1rem;
-            padding: 0.5rem 1rem;
-            border-left: 3px solid $color-light-secondary;
-            border-radius: 0 0.5rem 0.5rem 0;
-            background: rgba($color-light-primary, 0.6);
-            color: $color-light-font;
-
-            > :last-child { margin-bottom: 0; }
-        }
-
-        /* ----- 分隔线 ----- */
-        hr {
-            margin: 2rem 0;
-            border: none;
-            border-top: 1px solid $color-light-secondary;
-        }
-
-        /* ----- 图片 ----- */
-        img {
-            display: block;
-            max-width: 100%;
-            height: auto;
-            margin: 1.25rem auto;
-            border-radius: 0.5rem;
-        }
-
-        /* ----- 表格 ----- */
-        table {
-            display: block;
-            width: 100%;
-            margin: 1.25rem 0;
-            overflow-x: auto;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-        th, td {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid $color-light-secondary;
-            text-align: left;
-        }
-        th {
-            background: $color-light-primary;
-            color: $color-light-font-h;
-            font-weight: 600;
-        }
-        tbody tr:nth-child(even) { background: rgba($color-light-secondary, 0.25); }
-
-        /* ----- 行内代码 -----*/
-        :not(pre) > code {
-            font-family: $font-mono;
-            font-size: 0.875em;
-            padding: 0.15em 0.4em;
-            border-radius: 0.375rem;
-            background-color: $color-light-code-inline-bg;
-            color: $color-light-code-inline-text;
-            white-space: break-spaces;
-        }
-
-        /* ----- 代码块 -----*/
-        pre {
-            margin: 1.25rem 0;
-            padding: 1rem 1.25rem;
-            border: 1px solid $color-light-secondary;
-            border-radius: 0.75rem;
-            background-color: $color-light-code-bg;
-            font-family: $font-mono;
-            font-size: 0.85rem;
-            line-height: 1.6;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-
-            code {
-                display: block;
-                padding: 0;
-                border: none;
-                background: transparent;
-                color: $color-light-font-p;  
-                font: inherit;
-                white-space: pre;
-            }
-            .line { display: block; }
-        }
+      &:hover {
+        color: lighten($color-dark-link, 8%);
+      }
     }
+
+    li::marker {
+      color: $color-dark-font;
+    }
+
+    blockquote {
+      border-left-color: $color-dark-secondary;
+      background: rgba($color-dark-primary, 0.75);
+      color: $color-dark-font;
+    }
+
+    hr {
+      border-top-color: $color-dark-secondary;
+    }
+    img {
+      opacity: 0.9;
+    } // 纯白截图在暗底上太刺眼，压一点点
+
+    th,
+    td {
+      border-color: $color-dark-secondary;
+    }
+    th {
+      background: $color-dark-primary;
+      color: $color-dark-font-h;
+    }
+    tbody tr:nth-child(even) {
+      background: rgba($color-dark-secondary, 0.3);
+    }
+
+    :not(pre) > code {
+      background-color: $color-dark-code-inline-bg;
+      color: $color-dark-code-inline-text;
+    }
+
+    pre {
+      border-color: $color-dark-secondary;
+      background-color: $color-dark-code-bg;
+
+      // 亮色 token 走 shiki 的 --shiki-default，暗色由 html.dark .shiki span 接管
+      code {
+        color: $color-dark-font-p;
+      }
+    }
+  }
 }

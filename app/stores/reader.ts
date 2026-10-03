@@ -54,6 +54,8 @@ export const useReaderStore = defineStore('reader', () => {
   /** 当前文档路径 */
   const path = ref('')
   const title = ref('')
+  /** 当前文档描述（分享 / 兜底 meta 用） */
+  const description = ref('')
   /** 当前文档的全部锚点 */
   const toc = ref<TocItem[]>([])
   /** 当前锚点（点击跳转时更新；存的是 heading 的 id） */
@@ -63,11 +65,9 @@ export const useReaderStore = defineStore('reader', () => {
   const hasToc = computed(() => toc.value.length > 0)
 
   /** 当前锚点在列表里的下标，找不到就是 -1 */
-  const activeIndex = computed(() => toc.value.findIndex(item => item.id === activeId.value))
+  const activeIndex = computed(() => toc.value.findIndex((item) => item.id === activeId.value))
 
-  const activeItem = computed<TocItem | null>(
-    () => toc.value[activeIndex.value] ?? null,
-  )
+  const activeItem = computed<TocItem | null>(() => toc.value[activeIndex.value] ?? null)
 
   /**
    * 装载一篇文章。直接吃 `page.body.toc`（也接受已摊平的数组）。
@@ -76,10 +76,12 @@ export const useReaderStore = defineStore('reader', () => {
   function setArticle(payload: {
     path: string
     title?: string | null
+    description?: string | null
     toc?: TocTree | TocItem[] | null
   }) {
     path.value = payload.path
     title.value = payload.title ?? ''
+    description.value = payload.description ?? ''
     toc.value = Array.isArray(payload.toc) ? payload.toc : flattenToc(payload.toc)
     activeId.value = toc.value[0]?.id ?? ''
   }
@@ -98,7 +100,7 @@ export const useReaderStore = defineStore('reader', () => {
    */
   function jumpTo(id: string, options: { behavior?: ScrollBehavior } = {}) {
     const { behavior = 'smooth' } = options
-    if (!toc.value.some(item => item.id === id)) return
+    if (!toc.value.some((item) => item.id === id)) return
     activeId.value = id
     if (import.meta.server) return
     const el = document.getElementById(id)
@@ -123,6 +125,7 @@ export const useReaderStore = defineStore('reader', () => {
   function clear() {
     path.value = ''
     title.value = ''
+    description.value = ''
     toc.value = []
     activeId.value = ''
   }
@@ -130,6 +133,7 @@ export const useReaderStore = defineStore('reader', () => {
   return {
     path,
     title,
+    description,
     toc,
     activeId,
     count,
@@ -142,6 +146,6 @@ export const useReaderStore = defineStore('reader', () => {
     jumpTo,
     jumpToIndex,
     jumpBy,
-    clear,
+    clear
   }
 })

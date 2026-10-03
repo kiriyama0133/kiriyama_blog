@@ -1,10 +1,9 @@
 <!--
   SpinCircle —— 一个简单的转圈加载指示器。
 
-  颜色取自项目调色板（SFC 的 scoped 样式读不到 main.scss 里的 $color-*，
-  这里直接写死同样的色值，改色时记得和 main.css 的 @theme / main.scss 同步）：
-    · 轨道   #E0E0F0  ≈ light-secondary
-    · 旋转头 #969780  ≈ light-button-hover（暖橄榄，和整体色系同源）
+  颜色走 main.css 的语义变量（跟着 .dark 自己翻），不要在组件里写死色值：
+    · 轨道   --ui-spin-track  ≈ light-secondary / dark-secondary
+    · 旋转头 --ui-spin-head   ≈ 暖橄榄，和整体色系同源
 -->
 <template>
   <span class="spin" role="status" :aria-label="label">
@@ -21,8 +20,8 @@ withDefaults(defineProps<{ label?: string }>(), { label: '加载中' })
   display: inline-block;
   width: 1.5rem;
   height: 1.5rem;
-  border: 2px solid #e0e0f0;
-  border-top-color: #969780;
+  border: 2px solid var(--ui-spin-track);
+  border-top-color: var(--ui-spin-head);
   border-radius: 50%;
   animation: spin-circle 0.7s linear infinite;
 }

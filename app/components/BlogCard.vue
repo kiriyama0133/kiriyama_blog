@@ -5,12 +5,14 @@ defineProps<{ path: string }>()
 <template>
   <NuxtLink :to="path">
     <div class="card group transition-all">
-        <h2 class="group-hover:text-light-button-hover transition-all">
-            <slot name="title">默认标题</slot>
-        </h2>
-        <p>
-            <slot name="summary">默认摘要</slot>
-        </p>
+      <h2
+        class="group-hover:text-light-button-hover dark:group-hover:text-dark-button-hover transition-all"
+      >
+        <slot name="title">默认标题</slot>
+      </h2>
+      <p>
+        <slot name="summary">默认摘要</slot>
+      </p>
     </div>
   </NuxtLink>
 </template>

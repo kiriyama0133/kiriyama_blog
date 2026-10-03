@@ -20,7 +20,9 @@ const { color } = defineProps({
   padding: 1rem;
   border: 2px solid;
   border-radius: 0.5rem;
-  background-color: #fff;
+  /* 亮色纯白 → 暗色冷紫面（--ui-* 在 main.css 里跟着 .dark 自己翻） */
+  background-color: var(--ui-alert-bg);
+  color: var(--ui-text);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition:
     transform 0.2s ease,

@@ -4,7 +4,10 @@ export default defineContentConfig({
   collections: {
     content: defineCollection({
       type: 'page',
-      source: '**',
-    }),
-  },
+      source: {
+        include: '**/*.md',
+        exclude: ['.git/**', '.gitignore']
+      }
+    })
+  }
 })

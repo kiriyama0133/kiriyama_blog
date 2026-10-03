@@ -1,12 +1,3 @@
-<!--
-  TypeDropdown —— 按文档 type 筛选的下拉框（多选）
-
-  · 类型列表与计数都来自 store（store.types / store.typeCounts）
-  · 选中态直接写进 store.activeTypes，页面只需要读 store.filteredSummaries
-  · 配色：面板底色取暖橄榄「邻近色」(--color-light-menu)，
-    选中态借用与暖色「互补」的冷紫 (--color-light-primary)，
-    整条筛选栏只有这一处重音。
--->
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { onKeyStroke, onClickOutside } from '@vueuse/core'
@@ -30,17 +21,17 @@ const label = computed(() => {
   return `${picked.length} 个类型`
 })
 
-/** 未选中时才挂 hover 底色，避免把选中态的紫色盖掉 */
+/** 未选中挂 hover 底色 */
 function itemClass(on: boolean) {
   return on
-    ? 'bg-light-primary text-light-font-h font-semibold'
-    : 'text-light-font-p hover:bg-light-menu-hover'
+    ? 'bg-light-primary text-light-font-h font-semibold dark:bg-dark-primary dark:text-dark-font-h'
+    : 'text-light-font-p hover:bg-light-menu-hover dark:text-dark-font-p dark:hover:bg-dark-menu-hover'
 }
 
 function boxClass(on: boolean) {
   return on
-    ? 'border-light-primary bg-light-primary text-light-font-h'
-    : 'border-light-menu-border text-transparent'
+    ? 'border-light-primary bg-light-primary text-light-font-h dark:border-dark-primary dark:bg-dark-primary dark:text-dark-font-h'
+    : 'border-light-menu-border text-transparent dark:border-dark-menu-border'
 }
 
 function selectAll() {
@@ -54,9 +45,11 @@ function selectAll() {
     <button
       type="button"
       class="trigger flex h-10 cursor-pointer items-center gap-2 rounded-2xl border px-3 text-[13px] transition-all"
-      :class="allActive
-        ? 'border-light-menu-border bg-light-menu text-light-font-p hover:bg-light-menu-hover'
-        : 'border-light-primary bg-light-primary font-semibold text-light-font-h'"
+      :class="
+        allActive
+          ? 'border-light-menu-border bg-light-menu text-light-font-p hover:bg-light-menu-hover dark:border-dark-menu-border dark:bg-dark-menu dark:text-dark-font-p dark:hover:bg-dark-menu-hover'
+          : 'border-light-primary bg-light-primary font-semibold text-light-font-h dark:border-dark-primary dark:bg-dark-primary dark:text-dark-font-h'
+      "
       :aria-expanded="open"
       aria-haspopup="listbox"
       @click="open = !open"
@@ -93,23 +86,18 @@ function selectAll() {
     <Transition name="td">
       <div
         v-if="open"
-        class="panel absolute left-0 top-full z-50 mt-1.5 w-52 rounded-2xl border border-light-menu-border bg-light-menu p-1.5 shadow-lg"
+        class="panel absolute left-0 top-full z-50 mt-1.5 w-52 rounded-2xl border border-light-menu-border bg-light-menu p-1.5 shadow-lg dark:border-dark-menu-border dark:bg-dark-menu"
         role="listbox"
         aria-multiselectable="true"
         aria-label="按类型筛选"
       >
-        <button
-          type="button"
-          class="item"
-          :class="itemClass(allActive)"
-          @click="selectAll"
-        >
+        <button type="button" class="item" :class="itemClass(allActive)" @click="selectAll">
           <span class="box" :class="boxClass(allActive)" aria-hidden="true">✓</span>
           <span class="flex-1 text-left">全部类型</span>
-          <span class="count text-light-accent">{{ store.totalCount }}</span>
+          <span class="count text-light-accent dark:text-dark-accent">{{ store.totalCount }}</span>
         </button>
 
-        <div class="my-1 h-px bg-light-menu-border" />
+        <div class="my-1 h-px bg-light-menu-border dark:bg-dark-menu-border" />
 
         <button
           v-for="type in store.types"
@@ -123,10 +111,15 @@ function selectAll() {
         >
           <span class="box" :class="boxClass(store.isTypeActive(type))" aria-hidden="true">✓</span>
           <span class="flex-1 truncate text-left">{{ type }}</span>
-          <span class="count text-light-accent">{{ store.typeCounts[type] ?? 0 }}</span>
+          <span class="count text-light-accent dark:text-dark-accent">{{
+            store.typeCounts[type] ?? 0
+          }}</span>
         </button>
 
-        <p v-if="!store.types.length" class="px-2 py-1.5 text-[12px] text-light-font">
+        <p
+          v-if="!store.types.length"
+          class="px-2 py-1.5 text-[12px] text-light-font dark:text-dark-font"
+        >
           还没有可筛选的类型
         </p>
       </div>
@@ -155,7 +148,9 @@ function selectAll() {
   border-radius: 0.75rem;
   font-size: 13px;
   cursor: pointer;
-  transition: background-color 0.18s, color 0.18s;
+  transition:
+    background-color 0.18s,
+    color 0.18s;
 }
 
 .box {
@@ -179,7 +174,9 @@ function selectAll() {
 
 .td-enter-active,
 .td-leave-active {
-  transition: opacity 0.16s ease, transform 0.16s ease;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
 }
 
 .td-enter-from,

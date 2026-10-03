@@ -1,7 +1,7 @@
 <template>
   <div class="search-container">
     <div
-      class="search flex h-10 items-center gap-2 rounded-2xl bg-light-search p-2 shadow-sm transition-all duration-300 focus-within:shadow-xl"
+      class="search flex h-10 items-center gap-2 rounded-2xl bg-light-search p-2 shadow-sm transition-all duration-300 focus-within:shadow-xl dark:bg-dark-search"
     >
       <span
         class="search-icon shrink-0"
@@ -18,13 +18,16 @@
         aria-label="搜索文档"
       />
       <!-- 防抖等待中：输入已经变了，结果还没跟上 -->
-      <span v-if="store.searching" class="dots shrink-0 text-light-font-h" aria-hidden="true"
+      <span
+        v-if="store.searching"
+        class="dots shrink-0 text-light-font-h dark:text-dark-font-h"
+        aria-hidden="true"
         >···</span
       >
       <button
         v-if="store.keyword"
         type="button"
-        class="clear shrink-0 text-light-font-h hover:bg-light-button-hover"
+        class="clear shrink-0 text-light-font-h hover:bg-light-button-hover dark:text-dark-font-h dark:hover:bg-dark-button-hover"
         aria-label="清空搜索"
         @click="store.clearKeyword()"
       >
@@ -47,7 +50,6 @@ const noResults = computed(
   () => store.debouncedKeyword.trim().length > 0 && !store.searching && store.filteredCount === 0
 )
 
-// 用 mask 渲染 SVG，这样颜色（含红色失败态）完全可控
 const iconStyle = computed(() => {
   const url = noResults.value ? searchWrong : searchRight
   return {
@@ -66,7 +68,8 @@ const iconStyle = computed(() => {
   display: inline-block;
   width: 1.5rem;
   height: 1.5rem;
-  background-color: var(--color-light-font-h);
+  /* 语义变量：亮色 = 近黑，暗色 = 近白 */
+  background-color: var(--ui-text-strong);
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -75,20 +78,26 @@ const iconStyle = computed(() => {
   mask-size: contain;
   transition: background-color 0.2s ease;
 }
+// 搜索落空：告警红（暗色下换成更亮的红，深底才看得清）
 .search-icon.is-wrong {
-  background-color: #e5484d;
+  background-color: var(--ui-wrong);
 }
 .search_input {
   height: 100%;
   width: 100%;
   min-width: 0;
   background-color: transparent;
+  color: var(--ui-text-strong);
 
   // 去掉 type="search" 原生的清除按钮，只留自定义的 .clear
   appearance: none;
   &::-webkit-search-cancel-button,
   &::-webkit-search-decoration {
     display: none;
+  }
+
+  &::placeholder {
+    color: var(--ui-placeholder);
   }
 
   &:focus {
