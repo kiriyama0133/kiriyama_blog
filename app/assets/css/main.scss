@@ -157,7 +157,7 @@ $font-mono:
       color: $color-light-font;
     }
     mark {
-      background: #fff3b0;
+      background: $color-light-mark;
       padding: 0 0.2em;
       border-radius: 0.2em;
     }
@@ -271,6 +271,23 @@ $font-mono:
       white-space: break-spaces;
     }
 
+    /* ----- mermaid 图（```mermaid 代码块由 MermaidBlock 渲染成 SVG） -----*/
+    .mermaid {
+      margin: 1.25rem 0;
+      padding: 1rem;
+      border: 1px solid $color-light-secondary;
+      border-radius: 0.75rem;
+      background-color: $color-light-code-bg;
+      overflow-x: auto;
+      text-align: center;
+
+      svg {
+        display: inline-block;
+        max-width: 100%;
+        height: auto;
+      }
+    }
+
     /* ----- 代码块 -----*/
     pre {
       margin: 1.25rem 0;
@@ -370,6 +387,11 @@ $font-mono:
     :not(pre) > code {
       background-color: $color-dark-code-inline-bg;
       color: $color-dark-code-inline-text;
+    }
+
+    .mermaid {
+      border-color: $color-dark-secondary;
+      background-color: $color-dark-code-bg;
     }
 
     pre {

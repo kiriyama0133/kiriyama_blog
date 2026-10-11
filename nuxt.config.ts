@@ -27,6 +27,40 @@ export default defineNuxtConfig({
           lower: true,
           remove: /[^\w\s$*_+~.()'"!\-:@\u4e00-\u9fff]+/g
         }
+      },
+      markdown: {
+        // v3 默认 highlight: false，不配 = 代码块完全不高亮。
+        highlight: {
+          // 键名映射 html.<key>：dark → 生成 html.dark .shiki span { color: var(--shiki-dark) }
+          theme: {
+            default: 'github-light',
+            dark: 'github-dark'
+          },
+          // 默认值（json/js/ts/html/css/vue/shell/mdc/md/yaml）+ 笔记里实际用到的。
+          // 指定后会整组替换默认名单，所以默认项也要带上。
+          // c++ / c# / cs 是 cpp / csharp 的内置别名，不用单独列；mermaid 走 ProsePre 覆写，不走高亮。
+          langs: [
+            'json',
+            'js',
+            'ts',
+            'html',
+            'css',
+            'vue',
+            'shell',
+            'mdc',
+            'md',
+            'yaml',
+            'c',
+            'cpp',
+            'csharp',
+            'xml',
+            'nginx',
+            'graphql',
+            'cmake',
+            'bash',
+            'scss'
+          ]
+        }
       }
     }
   },

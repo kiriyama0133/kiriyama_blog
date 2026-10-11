@@ -1,5 +1,7 @@
 <template>
-  <div v-if="canGoBack" class="container fixed flex gap-4 p-4">
+  <!-- z-[55] 不能省：iOS 上 pre(overflow-x:auto) 是合成层，没有层级的 fixed 元素会被它盖住。
+       和 ThemeToggle 同级（55），高于首页筛选条（50）。 -->
+  <div v-if="canGoBack" class="container fixed z-[55] flex gap-4 p-4">
     <button
       type="button"
       class="btn shadow-lg flex items-center justify-center"

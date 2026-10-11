@@ -1,0 +1,68 @@
+﻿Progress: resolved 0, reused 1, downloaded 0, added 0
+Progress: resolved 192, reused 188, downloaded 0, added 0
+Progress: resolved 1073, reused 995, downloaded 0, added 0
+Progress: resolved 1186, reused 1040, downloaded 0, added 0
+Progress: resolved 1207, reused 1061, downloaded 0, added 0
+Progress: resolved 1229, reused 1083, downloaded 0, added 0
+Progress: resolved 1244, reused 1098, downloaded 0, added 0
+Progress: resolved 1250, reused 1104, downloaded 0, added 0
+Progress: resolved 1258, reused 1112, downloaded 0, added 0
+Progress: resolved 1271, reused 1125, downloaded 0, added 0
+Progress: resolved 1286, reused 1140, downloaded 0, added 0
+Progress: resolved 1293, reused 1147, downloaded 0, added 0
+鈥塛ARN鈥?1 deprecated subdependencies found: @types/parse-path@7.1.0
+Packages: +1149
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 1302, reused 1156, downloaded 0, added 0
+Progress: resolved 1302, reused 1156, downloaded 0, added 1, done
+
+> blog@0.1.0 prepare E:\kiriyama_blog
+> husky
+
+鈥塛ARN鈥?Issues with peer dependencies found
+.
+鈹溾攢鈹?@nuxt/kit 4.5.2
+鈹?鈹斺攢鈹?unctx 3.0.1
+鈹?  鈹斺攢鈹€ 鉁?unmet peer oxc-parser@>=0.140.0: found 0.139.0
+鈹溾攢鈹?@nuxt/content 3.16.1
+鈹?鈹斺攢鈹?nuxt-component-meta 0.18.0
+鈹?  鈹斺攢鈹?@nuxt/kit 4.5.2
+鈹?    鈹斺攢鈹?unctx 3.0.1
+鈹?      鈹溾攢鈹€ 鉁?unmet peer oxc-parser@>=0.140.0: found 0.139.0
+鈹?      鈹斺攢鈹€ 鉁?unmet peer unplugin@^3.3.0: found 2.3.11 in nuxt-component-meta
+鈹斺攢鈹?nuxt 4.5.2
+  鈹斺攢鈹?@nuxt/cli 3.37.0
+    鈹斺攢鈹?@bomb.sh/tab 0.0.19
+      鈹斺攢鈹€ 鉁?unmet peer cac@^6.7.14: found 7.0.0
+
+dependencies:
++ @nuxt/content 3.16.1
++ @pinia/nuxt 1.0.2
++ mermaid 11.17.2 (12.1.0 is available)
++ nuxt 4.5.2
++ pinia 4.0.3
++ vue 3.5.43
++ vue-router 5.3.1
+
+devDependencies:
++ @commitlint/cli 21.2.3
++ @commitlint/config-conventional 21.2.3
++ @nuxt/eslint 1.17.0
++ @nuxt/kit 4.5.2
++ @tailwindcss/vite 4.3.3
++ @vueuse/core 15.0.0
++ @vueuse/nuxt 15.0.0
++ better-sqlite3 13.0.3
++ conventional-changelog 8.1.3
++ conventional-changelog-conventionalcommits 10.4.0
++ eslint-config-prettier 10.1.8
++ husky 9.1.7
++ lint-staged 17.6.0
++ prettier 3.9.9
++ sass 1.105.1
++ tailwindcss 4.3.3
++ typescript 5.9.3
+
+鈺?Warning 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈺?鈹?                                                                             鈹?鈹?  Ignored build scripts: @parcel/watcher, better-sqlite3, esbuild,           鈹?鈹?  unrs-resolver.                                                             鈹?鈹?  Run "pnpm approve-builds" to pick which dependencies should be allowed     鈹?鈹?  to run scripts.                                                            鈹?鈹?                                                                             鈹?鈺扳攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈺?
+Done in 50.2s using pnpm v10.15.1
+exit=0

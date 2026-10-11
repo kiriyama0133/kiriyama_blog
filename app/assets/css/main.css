@@ -44,11 +44,6 @@
   --color-dark-menu-hover: #302f23;
   --color-dark-menu-border: #3f3d2c;
 
-  /* 代码块：配色 token 用 github-dark，底色跟着走同一个亮度区间 */
-  --color-dark-code-bg: #1f1f29;
-  --color-dark-code-inline-bg: #2a2a3a;
-  --color-dark-code-inline-text: #f0a0bc;
-
   --text-h1: 2.5rem;
   --text-h2: 2rem;
   --text-p: 1rem;

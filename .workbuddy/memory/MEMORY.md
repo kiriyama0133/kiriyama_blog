@@ -21,6 +21,16 @@
   所以 `.btn` / `.card` 这类公共类要在 main.css 里补 `.dark ...` 变体，而不是在组件里用 `dark:` 工具类去盖。
   反过来，模板里没有 scoped 样式冲突的地方，用 `dark:bg-dark-*` 这类工具类即可。
 - 固定层叠：首页 `.filter-bar` 是 `z-50`，浮动按钮要 ≥55，否则被 backdrop-filter 糊掉。
+  全站刻度：BackToTop 40 < filter-bar/RightRail 50 < FloatingMenu/ThemeToggle 55 < Notice 60。
+  **fixed 元素必须显式给 z-index**：iOS 上 `pre(overflow-x:auto)` 是合成层，会盖住没层级的 fixed。
+- 代码高亮：`@nuxt/content` **v3 的 `highlight` 默认是 false**，必须在
+  `content.build.markdown.highlight` 显式配置（双主题 default/dark + `langs` 全名单；
+  指定 `langs` 会整组替换默认名单）。v3 字段是 `langs`，不是 v2 的 `preload`。
+  **shiki 没有 xaml 语言**（写进 langs 会直接崩 dev server），xaml 围栏自动回退纯文本。
+  3.16 的高亮输出是类名压缩（`.sXxx{--shiki-default:…;--shiki-dark:…}`），验证看 `pre.shiki` 类
+  和代码块后的 `<style>`（内含 `html.dark .shiki span` 规则），别搜内联 style。
+- mermaid：覆写在 `app/components/content/ProsePre.vue`（`language==='mermaid'` → `MermaidBlock.vue`，
+  动态 import、随明暗主题重画）；mermaid **不要**加进 shiki `langs`。
 - 仓库里有 on-save 格式化（会把空 `catch` 里的注释抹掉）：别靠注释过 `no-empty`，写真实语句。
 - Prettier 配置在 `prettier.config.mjs`，但仓库现有代码跟它不一致（大量文件 `--check` 不过）；
   **不要随手 `prettier --write`**，会搅出无关 diff。

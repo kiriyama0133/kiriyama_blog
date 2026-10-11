@@ -1,0 +1,19 @@
+﻿.husky
+.workbuddy
+app
+content
+demo
+public
+.gitignore
+.gitmodules
+.prettierignore
+commitlint.config.mjs
+content.config.ts
+eslint.config.mjs
+nuxt.config.ts
+package.json
+pnpm-lock.yaml
+prettier.config.mjs
+README.md
+tsconfig.json
+node_modules: False

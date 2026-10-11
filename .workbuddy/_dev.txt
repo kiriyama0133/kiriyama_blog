@@ -1,0 +1,41 @@
+﻿
+> blog@0.1.0 dev E:\kiriyama_blog
+> nuxt dev
+
+|
+鈥? Nuxt 4.5.2 (with Nitro 2.13.4, Vite 8.3.2 and Vue 3.5.43)
+
+  鉃?Local:    http://localhost:3000/
+  鉃?Network:  use --host to expose
+
+  鉃?DevTools: press Shift + Alt + D in the browser (v3.4.2)
+
+[@nuxt/content] 鈭?Processed 2 collections and 138 files in 60379.11ms (0 cached, 138 parsed)
+node.exe : 
+At E:\emsdk\node\22.16.0_64bit\bin\pnpm.ps1:16 char:5
++     & "$basedir/node$exe"  "$basedir/node_modules/pnpm/bin/pnpm.cjs"  ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ WARN  Plugin "nuxt:devtools:config-retriever" defines Vite-specific hooks (configResolved) in a plugin returned from 
+applyToEnvironment. These hooks will be ignored.
+
+鈭?Vite client built in 796ms
+
+ WARN  Plugin "nuxt:devtools:config-retriever" defines Vite-specific hooks (configResolved) in a plugin returned from 
+applyToEnvironment. These hooks will be ignored. (x2)
+
+鈭?Vite server built in 26ms
+
+ WARN  [NUXT_B7002] Some vite.optimizeDeps.include entries could not be resolved: @nuxtjs/mdc > remark-gfm (from a 
+Nuxt module), @nuxtjs/mdc > remark-emoji (from a Nuxt module), @nuxtjs/mdc > remark-mdc (from a Nuxt module), 
+@nuxtjs/mdc > remark-rehype (from a Nuxt module), @nuxtjs/mdc > rehype-raw (from a Nuxt module), @nuxtjs/mdc > parse5 
+(from a Nuxt module), @nuxtjs/mdc > unist-util-visit (from a Nuxt module), @nuxtjs/mdc > unified (from a Nuxt module), 
+@nuxtjs/mdc > debug (from a Nuxt module), @nuxtjs/mdc > extend (from a Nuxt module).
+鈺扳柖 fix: Remove or correct these entries in the vite.optimizeDeps.include array of your nuxt.config.ts. Report entries 
+added by a Nuxt module to the module author.
+
+[nitro] 鈭?Nuxt Nitro server built in 2456ms
+i Vite server warmed up in 2ms
+i Vite client warmed up in 32ms

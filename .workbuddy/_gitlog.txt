@@ -1,0 +1,18 @@
+﻿git : C:/Program Files/Git/mingw64/libexec/git-core\git-submodule: line 22: .: 
+git-sh-setup: file not found
+At line:445 char:32
++ ... t-Location E:\kiriyama_blog; git submodule update --init 2>&1 | Out-F ...
++                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:/Program File... file not found 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.workbuddy/_dirlist.txt
+	.workbuddy/_gitlog.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
