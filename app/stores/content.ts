@@ -2,12 +2,15 @@ import { defineStore } from 'pinia'
 import type { ContentDocument, ContentMeta } from '~/types/markdown'
 import { getTypeFromPath } from '~/composables/useContentSummary'
 import { filterDocuments, useMarkdownSearch } from '~/composables/markdown'
+import { formatNoteDate } from '~/utils/date'
 
 interface SummaryItem {
   path: string
   title: string
   description: string
   type: string
+  /** `YYYY-MM-DD`；frontmatter 没写 date 就是空串 */
+  date: string
 }
 
 function toSummary(doc: ContentDocument): SummaryItem {
@@ -16,6 +19,7 @@ function toSummary(doc: ContentDocument): SummaryItem {
     title: doc.title || '',
     description: doc.description || '',
     type: doc.type,
+    date: doc.date
   }
 }
 
@@ -37,12 +41,12 @@ export const useContentStore = defineStore('content', () => {
     searching,
     results: searchResults,
     search,
-    clear: clearKeyword,
+    clear: clearKeyword
   } = useMarkdownSearch(documents)
 
   /** 全部出现过的 type（去重 + 排序）—— 下拉框用的就是这份 */
   const types = computed(() =>
-    [...new Set(documents.value.map(doc => doc.type).filter(Boolean))].sort(),
+    [...new Set(documents.value.map((doc) => doc.type).filter(Boolean))].sort()
   )
 
   /** 每个 type 下的文档数，给下拉框做角标 */
@@ -50,7 +54,7 @@ export const useContentStore = defineStore('content', () => {
     documents.value.reduce<Record<string, number>>((counts, doc) => {
       counts[doc.type] = (counts[doc.type] ?? 0) + 1
       return counts
-    }, {}),
+    }, {})
   )
 
   /** 当前选中的 type；空数组 = 不按 type 过滤 */
@@ -60,18 +64,16 @@ export const useContentStore = defineStore('content', () => {
   const filteredDocuments = computed(() =>
     filterDocuments(documents.value, {
       keyword: debouncedKeyword.value,
-      types: activeTypes.value,
-    }),
+      types: activeTypes.value
+    })
   )
 
-  const filteredSummaries = computed<SummaryItem[]>(() =>
-    filteredDocuments.value.map(toSummary),
-  )
+  const filteredSummaries = computed<SummaryItem[]>(() => filteredDocuments.value.map(toSummary))
 
   const filteredCount = computed(() => filteredDocuments.value.length)
 
   const hasFilters = computed(
-    () => debouncedKeyword.value.trim().length > 0 || activeTypes.value.length > 0,
+    () => debouncedKeyword.value.trim().length > 0 || activeTypes.value.length > 0
   )
 
   function isTypeActive(type: string) {
@@ -80,7 +82,7 @@ export const useContentStore = defineStore('content', () => {
 
   function toggleType(type: string) {
     activeTypes.value = isTypeActive(type)
-      ? activeTypes.value.filter(item => item !== type)
+      ? activeTypes.value.filter((item) => item !== type)
       : [...activeTypes.value, type]
   }
 
@@ -99,14 +101,15 @@ export const useContentStore = defineStore('content', () => {
 
   /* ---------------- 数据装载 ---------------- */
 
-  // 接收 ContentMeta[]（只含 path/title/description，不含 body），
-  // type 由 path 推导后拼成 ContentDocument[]
+  // 接收 ContentMeta[]（只含 path/title/description/meta，不含 body），
+  // type 由 path 推导、date 从 meta 拍平后拼成 ContentDocument[]
   function setDocuments(docs: ContentMeta[]) {
-    documents.value = docs.map(doc => ({
+    documents.value = docs.map((doc) => ({
       path: doc.path,
       title: doc.title || '',
       description: doc.description || '',
       type: getTypeFromPath(doc.path),
+      date: formatNoteDate(doc.meta?.date)
     }))
     loaded.value = true
   }
@@ -117,11 +120,11 @@ export const useContentStore = defineStore('content', () => {
       if (!groups[type]) groups[type] = []
       groups[type].push(item)
       return groups
-    }, {}),
+    }, {})
   )
 
   function getByPath(path: string) {
-    return documents.value.find(d => d.path === path)
+    return documents.value.find((d) => d.path === path)
   }
 
   function reset() {
@@ -158,6 +161,6 @@ export const useContentStore = defineStore('content', () => {
     filteredSummaries,
     filteredCount,
     hasFilters,
-    clearFilters,
+    clearFilters
   }
 })

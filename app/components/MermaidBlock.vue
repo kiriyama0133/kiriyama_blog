@@ -1,6 +1,5 @@
 <!--
   MermaidBlock —— 把 ```mermaid 代码块渲染成 SVG。
-  mermaid 体积大，动态 import 按需加载；SSR/SSG 只输出占位 div，客户端挂载后再画。
 -->
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'

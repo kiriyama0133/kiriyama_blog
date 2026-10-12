@@ -9,7 +9,10 @@ import { SITE_DESCRIPTION, pageTitle } from '~/utils/site'
 const store = useContentStore()
 
 const { data: pages } = await useAsyncData<ContentMeta[]>('pages-list', () =>
-  queryCollection('content').select('path', 'title', 'description').order('path', 'ASC').all()
+  queryCollection('content')
+    .select('path', 'title', 'description', 'meta')
+    .order('path', 'ASC')
+    .all()
 )
 
 watchEffect(() => {
@@ -54,7 +57,12 @@ definePageMeta({
         <span v-else>共 {{ store.totalCount }} 篇文档</span>
       </p>
 
-      <BlogCard v-for="item in store.filteredSummaries" :key="item.path" :path="item.path">
+      <BlogCard
+        v-for="item in store.filteredSummaries"
+        :key="item.path"
+        :path="item.path"
+        :date="item.date"
+      >
         <template #title>{{ item.title }}</template>
         <template #summary>{{ item.description }}</template>
       </BlogCard>
