@@ -77,6 +77,13 @@
   --ui-spin-head: #969780;
   --ui-rail-track: #0f1522;
   --ui-rail-thumb: #c8ee8c9f;
+  /*
+   * 更新热力图（UpdateHeatmap）：格子的冷端 → 热端渐变。
+   * 组件要拿真实色值（那个图表会把两端做线性插值，喂 var()/currentColor 会算不出来），
+   * 所以由组件在客户端用 getComputedStyle 读走这两条 —— 改色只改这里。
+   */
+  --ui-heat-cold: #e7e5d6;
+  --ui-heat-hot: #7d8065;
 }
 
 /* 首页：固定筛选条高 4rem（+1.25rem 渐隐），浮动按钮那一行整体让到它下面 */
@@ -104,6 +111,9 @@ body:has(.filter-bar) {
   --ui-spin-head: #b3b98f;
   --ui-rail-track: #4b4b60;
   --ui-rail-thumb: #c8ee8ccc;
+  /* 暗色下冷端要暗但不等于画布（否则整块糊在一起），热端提亮 */
+  --ui-heat-cold: #34372a;
+  --ui-heat-hot: #b3b98f;
 }
 
 @layer utilities {

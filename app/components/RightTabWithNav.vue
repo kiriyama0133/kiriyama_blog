@@ -10,7 +10,8 @@ import { canonicalPath } from '~/utils/path'
 const store = useContentStore()
 const route = useRoute()
 
-const items = computed(() => store.summaries)
+// 跟着筛选走：关键词 / 类型一变，扇形里的文档也跟着收窄（filteredSummaries 已在 store 里算好）
+const items = computed(() => store.filteredSummaries)
 
 // route.path 带编码和尾斜杠，item.path 是解码原文，先规范再比
 const currentPath = computed(() => canonicalPath(route.path))

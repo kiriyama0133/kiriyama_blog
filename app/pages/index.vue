@@ -4,6 +4,7 @@ import { useContentStore } from '~/stores/content'
 import BlogCard from '~/components/BlogCard.vue'
 import Search from '~/components/Search.vue'
 import TypeDropdown from '~/components/TypeDropdown.vue'
+import chartIcon from '~/assets/image/align-bottom-svgrepo-com.svg'
 import { SITE_DESCRIPTION, pageTitle } from '~/utils/site'
 
 const store = useContentStore()
@@ -30,15 +31,34 @@ useSeoMeta({
 definePageMeta({
   layout: 'index-layout'
 })
+
+const showDialog = ref(false)
+
+/** 图表按钮图标：走 mask 上色，颜色跟着按钮文字（currentColor）一起随主题 / hover 变 */
+const chartIconStyle = {
+  '-webkit-mask-image': `url("${chartIcon}")`,
+  'mask-image': `url("${chartIcon}")`
+}
 </script>
 
 <template>
   <div class="index-page">
+    <ClientOnly><Dialog v-model="showDialog" /></ClientOnly>
     <!-- 固定在顶部：半透明底 + backdrop-blur，卡片从下面滚过时在衔接处被糊掉 -->
     <header class="filter-bar">
       <div class="container filter-bar__inner">
         <TypeDropdown />
         <Search />
+        <button
+          type="button"
+          class="btn chart-btn"
+          aria-haspopup="dialog"
+          aria-label="查看分类占比图表"
+          @click="showDialog = true"
+        >
+          <span class="chart-btn__icon" :style="chartIconStyle" aria-hidden="true" />
+          <span class="chart-btn__label">图表</span>
+        </button>
       </div>
     </header>
 
@@ -56,7 +76,6 @@ definePageMeta({
         </span>
         <span v-else>共 {{ store.totalCount }} 篇文档</span>
       </p>
-
       <BlogCard
         v-for="item in store.filteredSummaries"
         :key="item.path"
@@ -92,20 +111,20 @@ $filter-bar-h: 4rem;
   -webkit-backdrop-filter: blur(14px) saturate(140%);
 
   // 衔接处：往下一小段继续磨砂并渐隐，避免出现生硬的横线
-  &::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    height: 1.25rem;
-    pointer-events: none;
-    background: linear-gradient(to bottom, var(--ui-backdrop), transparent);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
-    mask-image: linear-gradient(to bottom, #000, transparent);
-  }
+  // &::after {
+  //   content: '';
+  //   position: absolute;
+  //   top: 100%;
+  //   left: 0;
+  //   right: 0;
+  //   height: 1.25rem;
+  //   pointer-events: none;
+  //   background: linear-gradient(to bottom, var(--ui-backdrop), transparent);
+  //   backdrop-filter: blur(10px);
+  //   -webkit-backdrop-filter: blur(10px);
+  //   -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
+  //   mask-image: linear-gradient(to bottom, #000, transparent);
+  // }
 }
 
 // 用 .container 保证搜索框与下方正文左对齐
@@ -118,6 +137,35 @@ $filter-bar-h: 4rem;
 // 给固定条让位
 .index-body {
   padding-block: calc(#{$filter-bar-h} + 1.25rem) 3rem;
+}
+
+.chart-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+// 内联 SVG 走 mask：单色图标，用 background-color 上色（currentColor = .btn 的文字色）
+.chart-btn__icon {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+// 窄屏收成纯图标，跟 Search / TypeDropdown 的响应式行为对齐
+@media (width < 640px) {
+  .chart-btn__label {
+    display: none;
+  }
 }
 
 .filter-meta {

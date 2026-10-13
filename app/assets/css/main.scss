@@ -236,6 +236,17 @@ $font-mono:
       border-radius: 0.5rem;
     }
 
+    /* ----- 内联 SVG（笔记里手写的图表） -----
+       模块 svg-attribute-fix 会给根 svg 注入 max-width:min(<viewBox宽>px,100%)，
+       这里只负责居中与比例：display 复位成 block（preflight 已经是 block，写明是为了不依赖它），
+       height:auto 保证宽高比跟着 viewBox 走。注意 .mermaid svg 更具体，会盖过这里。 */
+    svg {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 1.25rem auto;
+    }
+
     /* ----- 表格 ----- */
     table {
       display: block;
@@ -285,6 +296,8 @@ $font-mono:
         display: inline-block;
         max-width: 100%;
         height: auto;
+        /* 上面 .markdown-body svg 有条 margin，这里显式归零，mermaid 的外框由 .mermaid 自己给 */
+        margin: 0;
       }
     }
 

@@ -3,6 +3,7 @@ import type { ContentDocument, ContentMeta } from '~/types/markdown'
 import { getTypeFromPath } from '~/composables/useContentSummary'
 import { filterDocuments, useMarkdownSearch } from '~/composables/markdown'
 import { formatNoteDate } from '~/utils/date'
+import type { Categories, ChartDatum } from '~/types/categories'
 
 interface SummaryItem {
   path: string
@@ -123,6 +124,31 @@ export const useContentStore = defineStore('content', () => {
     }, {})
   )
 
+  const categories = computed<Categories[]>(() => {
+    const entries = Object.entries(groupedByType.value)
+    const total = entries.reduce((sum, [, list]) => sum + list.length, 0)
+    const colors = generateColors(entries.length)
+
+    return entries.map(([type, list], i) => ({
+      label: type,
+      value: list.length,
+      percentage: total > 0 ? Number(((list.length / total) * 100).toFixed(2)) : 0,
+      color: colors[i] ?? '#cccccc'
+    }))
+  })
+
+  /**
+   * 图表直接消费的数据集：`vue-data-ui` 的 `VueUiSparkStackbar` 的 dataset 形状。
+   * 放 store 里，组件写成 `store.chartDataset` 即可，不用再自己 map / 转换。
+   */
+  const chartDataset = computed<ChartDatum[]>(() =>
+    categories.value.map((item) => ({
+      name: item.label,
+      value: item.value,
+      color: item.color
+    }))
+  )
+
   function getByPath(path: string) {
     return documents.value.find((d) => d.path === path)
   }
@@ -161,6 +187,8 @@ export const useContentStore = defineStore('content', () => {
     filteredSummaries,
     filteredCount,
     hasFilters,
-    clearFilters
+    clearFilters,
+    categories,
+    chartDataset
   }
 })
