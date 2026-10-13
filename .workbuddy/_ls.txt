@@ -1,0 +1,51 @@
+﻿
+Mode   Length Name                         
+----   ------ ----                         
+d-----        memory                       
+d-----        _chrome-profile              
+d-----        _chrome-profile-1791907069940
+d-----        _chrome-profile-1791907146916
+d-----        _chrome-profile-1791907188673
+d-----        _chrome-profile-1791907240248
+d-----        _chrome-profile-1791907287637
+-a---- 604    snippet.mjs                  
+-a---- 1487   verify.mjs                   
+-a---- 55     _check.txt                   
+-a---- 58     _chrome.txt                  
+-a---- 2327   _dev.log                     
+-a---- 0      _dev.txt                     
+-a---- 268    _dirlist.txt                 
+-a---- 50992  _gen.log                     
+-a---- 732    _gitlog.txt                  
+-a---- 2815   _gitlog2.txt                 
+-a---- 18523  _home.html                   
+-a---- 148483 _home2.html                  
+-a---- 147994 _home3001.html               
+-a---- 841    _i18n_peer.txt               
+-a---- 0      _i18n_peer2.txt              
+-a---- 325    _i18n_ver.txt                
+-a---- 5664   _install.log                 
+-a---- 2954   _install2.log                
+-a---- 24     _kill.log                    
+-a---- 265    _lint.log                    
+-a---- 258970 _lint2.log                   
+-a---- 0      _ls.txt                      
+-a---- 3834   _pnpm.txt                    
+-a---- 732    _snippet.txt                 
+-a---- 5900   _verify-i18n.mjs             
+-a---- 1851   _verify.log                  
+-a---- 243    _verify.txt                  
+-a---- 3063   _verify2.log                 
+-a---- 3063   _verify3.log                 
+-a---- 1045   _verify4.log                 
+-a---- 634    _verify5.log                 
+-a---- 4756   _verify6.log                 
+
+
+memory
+_chrome-profile
+_chrome-profile-1791907069940
+_chrome-profile-1791907146916
+_chrome-profile-1791907188673
+_chrome-profile-1791907240248
+_chrome-profile-1791907287637

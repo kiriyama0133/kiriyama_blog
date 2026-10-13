@@ -3,8 +3,8 @@
     <button
       type="button"
       class="btn shadow-lg flex items-center justify-center"
-      title="返回"
-      aria-label="返回"
+      :title="$t('actions.back')"
+      :aria-label="$t('actions.back')"
       @click="goBack()"
     >
       <span class="icon" :style="returnIconStyle" aria-hidden="true" />
@@ -13,8 +13,8 @@
     <button
       type="button"
       class="btn shadow-lg flex items-center justify-center"
-      title="分享"
-      aria-label="分享"
+      :title="$t('actions.share')"
+      :aria-label="$t('actions.share')"
       @click="shareNote"
     >
       <span class="icon" :style="shareIconStyle" aria-hidden="true" />

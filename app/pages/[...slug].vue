@@ -2,12 +2,13 @@
 import { computed, watch } from 'vue'
 import type { TocTree } from '~/stores/reader'
 import { useReaderStore } from '~/stores/reader'
-import { pageTitle } from '~/utils/site'
+import { useSiteMeta } from '~/composables/useSiteMeta'
 import { canonicalPath } from '~/utils/path'
 import { formatNoteDate } from '~/utils/date'
 
 const route = useRoute()
 const reader = useReaderStore()
+const { pageTitle } = useSiteMeta()
 
 // 内容库里的 path 是解码原文且无尾斜杠，route.path 可能两者都不是
 const contentPath = canonicalPath(route.path)

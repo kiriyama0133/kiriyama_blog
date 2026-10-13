@@ -16,6 +16,7 @@ import 'vue-data-ui/style.css'
 // <UpdateHeatmap> 是 components/UpdateHeatmap.client.vue，走 Nuxt 自动注册（和本组件同一套路）
 
 const store = useContentStore()
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: boolean
@@ -38,12 +39,14 @@ const closeDialog = () => {
  * 上色说明：vue-data-ui 把颜色写在 SVG 的 `fill` **属性**上，而属性不支持 `var()`。
  * 所以这里统一用 `currentColor`（属性关键字，合法），实际颜色由 .dialog 的 `color`
  *（= --ui-text）给出，跟着 .dark 一起翻。条形颜色不用配 —— dataset 每一项都自带 color。
+ *
+ * 写成 computed：弹窗开着时切语言，标题要立刻跟着变。
  */
-const sparkConfig = {
+const sparkConfig = computed(() => ({
   style: {
     backgroundColor: 'transparent',
     title: {
-      text: '分类占比',
+      text: t('chart.categoryTitle'),
       color: 'currentColor',
       fontSize: 14,
       bold: true,
@@ -62,7 +65,7 @@ const sparkConfig = {
       percentage: { show: true, color: 'currentColor' }
     }
   }
-}
+}))
 </script>
 
 <style lang="scss" scoped>

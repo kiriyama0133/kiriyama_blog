@@ -5,8 +5,10 @@ import BlogCard from '~/components/BlogCard.vue'
 import Search from '~/components/Search.vue'
 import TypeDropdown from '~/components/TypeDropdown.vue'
 import chartIcon from '~/assets/image/align-bottom-svgrepo-com.svg'
-import { SITE_DESCRIPTION, pageTitle } from '~/utils/site'
+import { useSiteMeta } from '~/composables/useSiteMeta'
 
+const { t } = useI18n()
+const { pageTitle, siteDescription } = useSiteMeta()
 const store = useContentStore()
 
 const { data: pages } = await useAsyncData<ContentMeta[]>('pages-list', () =>
@@ -24,8 +26,8 @@ watchEffect(() => {
 
 // 列表页只有站点名，不挂「· 站点名」尾巴
 useSeoMeta({
-  title: () => pageTitle('全部笔记'),
-  description: SITE_DESCRIPTION
+  title: () => pageTitle(t('home.seoTitle')),
+  description: () => siteDescription.value
 })
 
 definePageMeta({
@@ -53,11 +55,11 @@ const chartIconStyle = {
           type="button"
           class="btn chart-btn"
           aria-haspopup="dialog"
-          aria-label="查看分类占比图表"
+          :aria-label="t('home.chartButtonAria')"
           @click="showDialog = true"
         >
           <span class="chart-btn__icon" :style="chartIconStyle" aria-hidden="true" />
-          <span class="chart-btn__label">图表</span>
+          <span class="chart-btn__label">{{ t('home.chartButton') }}</span>
         </button>
       </div>
     </header>
@@ -65,16 +67,16 @@ const chartIconStyle = {
     <div class="container index-body">
       <p class="filter-meta text-light-font dark:text-dark-font">
         <span v-if="store.hasFilters">
-          筛选出 {{ store.filteredCount }} / {{ store.totalCount }} 篇
+          {{ t('home.filtered', { shown: store.filteredCount, total: store.totalCount }) }}
           <button
             type="button"
             class="filter-reset cursor-pointer text-light-accent underline hover:text-light-font-h dark:text-dark-accent dark:hover:text-dark-font-h"
             @click="store.clearFilters()"
           >
-            清除筛选
+            {{ t('home.clearFilters') }}
           </button>
         </span>
-        <span v-else>共 {{ store.totalCount }} 篇文档</span>
+        <span v-else>{{ t('home.totalDocs', { total: store.totalCount }) }}</span>
       </p>
       <BlogCard
         v-for="item in store.filteredSummaries"
@@ -90,7 +92,7 @@ const chartIconStyle = {
         v-if="store.hasFilters && !store.filteredCount"
         class="empty text-light-font dark:text-dark-font"
       >
-        没有匹配的文档，换个关键词或类型试试。
+        {{ t('home.empty') }}
       </p>
     </div>
   </div>

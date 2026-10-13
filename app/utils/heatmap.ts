@@ -9,8 +9,15 @@
  * 列数随数据增长 —— 正好让宽的那一维横向铺开，窄的固定 7 行。
  */
 
-/** 行顺序固定从周一开始（中文习惯） */
-export const WEEKDAY_LABELS = ['一', '二', '三', '四', '五', '六', '日'] as const
+/**
+ * 行顺序固定从周一开始。
+ * 这里只存「第几行」，真正显示出来的文字由 i18n 提供（见 `useUpdateHeatmap`），
+ * 因为这个工具函数是纯函数，不碰 Vue 也不碰 locale。
+ */
+export const WEEKDAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
+
+/** 没传 `weekdayLabels` 时的兜底显示文案（调用方通常都会传本地化后的标签） */
+export const DEFAULT_WEEKDAY_LABELS = ['一', '二', '三', '四', '五', '六', '日'] as const
 
 /** 一年视图。数据跨度超过它就滑动窗口，只保留最近这么多周，避免列数无限膨胀 */
 export const MAX_WEEKS = 53
@@ -48,12 +55,12 @@ export interface HeatmapGrid {
   end: string
 }
 
-function emptyGrid(): HeatmapGrid {
+function emptyGrid(weekdayLabels: readonly string[]): HeatmapGrid {
   return {
-    dataset: WEEKDAY_LABELS.map((name) => ({ name, values: [] })),
+    dataset: weekdayLabels.map((name) => ({ name, values: [] })),
     xLabels: [],
     columnDates: [],
-    yLabels: [...WEEKDAY_LABELS],
+    yLabels: [...weekdayLabels],
     columns: 0,
     total: 0,
     maxCount: 0,
@@ -127,21 +134,27 @@ export function shiftDayKey(key: string, days: number): string {
  */
 export function buildHeatmapGrid(
   counts: Map<string, number>,
-  options: { today?: Date; maxWeeks?: number } = {}
+  options: {
+    today?: Date
+    maxWeeks?: number
+    /** 7 个周标签，顺序固定周一 → 周日；不传用中文兜底 */
+    weekdayLabels?: readonly string[]
+  } = {}
 ): HeatmapGrid {
   const today = startOfDay(options.today ?? new Date())
   const maxWeeks = options.maxWeeks ?? MAX_WEEKS
+  const weekdayLabels = options.weekdayLabels ?? DEFAULT_WEEKDAY_LABELS
 
   const days = [...counts.keys()]
     .map(parseDay)
     .filter((date): date is Date => date !== null)
     .sort((a, b) => a.getTime() - b.getTime())
 
-  if (days.length === 0) return emptyGrid()
+  if (days.length === 0) return emptyGrid(weekdayLabels)
 
   const firstDay = days[0]
   const lastDay = days[days.length - 1]
-  if (!firstDay || !lastDay) return emptyGrid()
+  if (!firstDay || !lastDay) return emptyGrid(weekdayLabels)
 
   // 最晚日期可能在未来（笔记可以预填日期），所以和今天取大值，别把未来的更新裁掉
   const rangeEnd = lastDay.getTime() > today.getTime() ? lastDay : today
@@ -155,7 +168,7 @@ export function buildHeatmapGrid(
     weekStart = addDays(weekEnd, -7 * (columns - 1))
   }
 
-  const dataset = WEEKDAY_LABELS.map((name, rowIndex) => {
+  const dataset = weekdayLabels.map((name, rowIndex) => {
     const values: (number | null)[] = []
     for (let week = 0; week < columns; week += 1) {
       const date = addDays(weekStart, week * 7 + rowIndex)
@@ -198,7 +211,7 @@ export function buildHeatmapGrid(
     dataset,
     xLabels,
     columnDates,
-    yLabels: [...WEEKDAY_LABELS],
+    yLabels: [...weekdayLabels],
     columns,
     total,
     maxCount,

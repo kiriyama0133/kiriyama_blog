@@ -4,6 +4,9 @@
   位置：和 FloatingMenu 同一行（都是距顶 1rem），贴在容器右侧，
   所以两边按钮的水平内缩（1rem）与高度完全对齐。
   首页顶部有固定筛选条（4rem 高），那里往下让一行，别和搜索框叠在一起。
+
+  语言不在这里切换 —— 站点按浏览器语言偏好（navigator.languages）自动选语言，
+  见 nuxt.config.ts 的 i18n.detectBrowserLanguage。
 -->
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -12,6 +15,7 @@ import sunIcon from '~/assets/image/dark-svgrepo-com.svg'
 import { useTheme } from '~/composables/useTheme'
 
 const { isDark, toggle } = useTheme()
+const { t } = useI18n()
 
 // 图标 = 「点下去会切到的那个模式」：亮色时给月亮，暗色时给太阳
 const iconStyle = computed(() => {
@@ -22,7 +26,7 @@ const iconStyle = computed(() => {
   }
 })
 
-const label = computed(() => (isDark.value ? '切换到亮色' : '切换到暗色'))
+const label = computed(() => (isDark.value ? t('theme.toLight') : t('theme.toDark')))
 </script>
 
 <template>

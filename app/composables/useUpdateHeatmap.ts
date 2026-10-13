@@ -1,7 +1,7 @@
 import { computed, toValue } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
 import { useContentStore } from '~/stores/content'
-import { MAX_WEEKS, buildHeatmapGrid, countNotesByDay } from '~/utils/heatmap'
+import { MAX_WEEKS, WEEKDAY_KEYS, buildHeatmapGrid, countNotesByDay } from '~/utils/heatmap'
 
 export interface UseUpdateHeatmapOptions {
   /**
@@ -19,6 +19,10 @@ export interface UseUpdateHeatmapOptions {
  */
 export function useUpdateHeatmap(options: UseUpdateHeatmapOptions = {}) {
   const store = useContentStore()
+  const { t } = useI18n()
+
+  /** 周标签跟着语言走（顺序固定周一 → 周日，由 WEEKDAY_KEYS 决定） */
+  const weekdayLabels = computed(() => WEEKDAY_KEYS.map((key) => t(`weekday.${key}`)))
 
   /** 每天更新了几篇（只统计 frontmatter 写了 `date` 的） */
   const counts = computed(() => countNotesByDay(store.documents.map((doc) => doc.date)))
@@ -26,7 +30,12 @@ export function useUpdateHeatmap(options: UseUpdateHeatmapOptions = {}) {
   const weeks = computed(() => toValue(options.maxWeeks) ?? MAX_WEEKS)
 
   /** 日历矩阵：行 = 周一..周日，列 = 周 */
-  const grid = computed(() => buildHeatmapGrid(counts.value, { maxWeeks: weeks.value }))
+  const grid = computed(() =>
+    buildHeatmapGrid(counts.value, {
+      maxWeeks: weeks.value,
+      weekdayLabels: weekdayLabels.value
+    })
+  )
 
   /** 有没有任何带日期的笔记 —— 没有的话组件显示占位文案 */
   const hasData = computed(() => grid.value.columns > 0)

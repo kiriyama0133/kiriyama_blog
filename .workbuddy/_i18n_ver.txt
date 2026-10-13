@@ -1,0 +1,13 @@
+﻿{
+  "7x": "7.3.1",
+  "8x": "8.5.6",
+  "9x": "9.5.6",
+  "latest": "10.6.0"
+}
+{
+  "error": {
+    "code": "E404",
+    "summary": "No match found for version next",
+    "detail": "'@nuxtjs/i18n@next' is not in this registry.\n\nNote that you can also install from a\ntarball, folder, http url, or git url."
+  }
+}

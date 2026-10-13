@@ -9,11 +9,11 @@ defineProps<{ path: string; date?: string }>()
       <h2
         class="group-hover:text-light-button-hover dark:group-hover:text-dark-button-hover transition-all"
       >
-        <slot name="title">默认标题</slot>
+        <slot name="title">{{ $t('card.defaultTitle') }}</slot>
       </h2>
       <time v-if="date" class="card-date" :datetime="date">{{ date }}</time>
       <p>
-        <slot name="summary">默认摘要</slot>
+        <slot name="summary">{{ $t('card.defaultSummary') }}</slot>
       </p>
     </div>
   </NuxtLink>

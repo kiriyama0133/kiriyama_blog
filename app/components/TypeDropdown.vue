@@ -4,6 +4,7 @@ import { onKeyStroke, onClickOutside } from '@vueuse/core'
 import { useContentStore } from '~/stores/content'
 
 const store = useContentStore()
+const { t } = useI18n()
 
 const root = ref<HTMLElement | null>(null)
 const open = ref(false)
@@ -16,9 +17,9 @@ const allActive = computed(() => store.activeTypes.length === 0)
 
 const label = computed(() => {
   const picked = store.activeTypes
-  if (!picked.length) return '全部类型'
+  if (!picked.length) return t('typeFilter.all')
   if (picked.length === 1) return picked[0]!
-  return `${picked.length} 个类型`
+  return t('typeFilter.count', { count: picked.length })
 })
 
 /** 未选中挂 hover 底色 */
@@ -89,11 +90,11 @@ function selectAll() {
         class="panel absolute left-0 top-full z-50 mt-1.5 w-52 rounded-2xl border border-light-menu-border bg-light-menu p-1.5 shadow-lg dark:border-dark-menu-border dark:bg-dark-menu"
         role="listbox"
         aria-multiselectable="true"
-        aria-label="按类型筛选"
+        :aria-label="$t('typeFilter.label')"
       >
         <button type="button" class="item" :class="itemClass(allActive)" @click="selectAll">
           <span class="box" :class="boxClass(allActive)" aria-hidden="true">✓</span>
-          <span class="flex-1 text-left">全部类型</span>
+          <span class="flex-1 text-left">{{ $t('typeFilter.all') }}</span>
           <span class="count text-light-accent dark:text-dark-accent">{{ store.totalCount }}</span>
         </button>
 
@@ -120,7 +121,7 @@ function selectAll() {
           v-if="!store.types.length"
           class="px-2 py-1.5 text-[12px] text-light-font dark:text-dark-font"
         >
-          还没有可筛选的类型
+          {{ $t('typeFilter.empty') }}
         </p>
       </div>
     </Transition>

@@ -1,0 +1,66 @@
+{
+  "site": {
+    "name": "Blog",
+    "description": "个人前端笔记 —— Vue / Nuxt / 工程化"
+  },
+  "common": {
+    "loading": "加载中"
+  },
+  "home": {
+    "seoTitle": "全部笔记",
+    "chartButton": "图表",
+    "chartButtonAria": "查看分类占比图表",
+    "filtered": "筛选出 {shown} / {total} 篇",
+    "clearFilters": "清除筛选",
+    "totalDocs": "共 {total} 篇文档",
+    "empty": "没有匹配的文档，换个关键词或类型试试。"
+  },
+  "search": {
+    "placeholder": "搜索文档…",
+    "label": "搜索文档",
+    "noResults": "未找到匹配内容",
+    "clear": "清空搜索"
+  },
+  "typeFilter": {
+    "all": "全部类型",
+    "count": "{count} 个类型",
+    "label": "按类型筛选",
+    "empty": "还没有可筛选的类型"
+  },
+  "actions": {
+    "back": "返回",
+    "share": "分享",
+    "backToTop": "回到顶部"
+  },
+  "theme": {
+    "toLight": "切换到亮色",
+    "toDark": "切换到暗色"
+  },
+  "card": {
+    "defaultTitle": "默认标题",
+    "defaultSummary": "默认摘要"
+  },
+  "chart": {
+    "categoryTitle": "分类占比"
+  },
+  "heatmap": {
+    "title": "更新热力图",
+    "meta": "{start} ~ {end} · {days} 天有更新 · 共 {total} 篇",
+    "empty": "笔记里还没有写 `date`，暂时画不出热力图",
+    "tooltipDate": "{date} 周{weekday}",
+    "tooltipCount": "{count} 篇"
+  },
+  "weekday": {
+    "mon": "一",
+    "tue": "二",
+    "wed": "三",
+    "thu": "四",
+    "fri": "五",
+    "sat": "六",
+    "sun": "日"
+  },
+  "notice": {
+    "linkCopied": "链接已复制",
+    "shareUnsupported": "当前浏览器不支持分享"
+  }
+}

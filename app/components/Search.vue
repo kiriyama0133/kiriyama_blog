@@ -8,14 +8,14 @@
         :class="{ 'is-wrong': noResults }"
         :style="iconStyle"
         role="img"
-        :aria-label="noResults ? '未找到匹配内容' : '搜索'"
+        :aria-label="noResults ? $t('search.noResults') : $t('search.label')"
       />
       <input
         v-model="store.keyword"
         class="search_input"
         type="search"
-        placeholder="搜索文档…"
-        aria-label="搜索文档"
+        :placeholder="$t('search.placeholder')"
+        :aria-label="$t('search.label')"
       />
       <!-- 防抖等待中：输入已经变了，结果还没跟上 -->
       <span
@@ -28,7 +28,7 @@
         v-if="store.keyword"
         type="button"
         class="clear shrink-0 text-light-font-h hover:bg-light-button-hover dark:text-dark-font-h dark:hover:bg-dark-button-hover"
-        aria-label="清空搜索"
+        :aria-label="$t('search.clear')"
         @click="store.clearKeyword()"
       >
         ×

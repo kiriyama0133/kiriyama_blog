@@ -32,6 +32,10 @@
 - mermaid：覆写在 `app/components/content/ProsePre.vue`（`language==='mermaid'` → `MermaidBlock.vue`，
   动态 import、随明暗主题重画）；mermaid **不要**加进 shiki `langs`。
 - 仓库里有 on-save 格式化（会把空 `catch` 里的注释抹掉）：别靠注释过 `no-empty`，写真实语句。
+- **同一个文件的多处改动不要放在同一条消息里并行提交**：本环境里并行的 Edit 会各自基于旧快照写回、
+  互相覆盖，结果是「一半改了、一半没改」，而工具回报全是成功（index.vue / heatmap.ts /
+  UpdateHeatmap.client.vue 都中招过）。改同一个文件就一次一个；改动多就直接整文件 Write（原子）。
+  改完务必重新读一遍或跑 lint 验证，别信 Edit 的返回值。
 - Prettier 配置在 `prettier.config.mjs`，但仓库现有代码跟它不一致（大量文件 `--check` 不过）；
   **不要随手 `prettier --write`**，会搅出无关 diff。
 
@@ -56,10 +60,34 @@
   slug 页 `setArticle({ path, title, description, toc })`。
 - `FloatingMenu.vue` = 返回/分享两个按钮；`ThemeToggle.vue` = 明暗切换，同高右侧。
 
+## 国际化（i18n）
+- 模块 `@nuxtjs/i18n@10.6.0`（**包名是 `@nuxtjs/i18n`**，没有 `@nuxt/i18n` 这个东西）。
+- `strategy: 'no_prefix'` + `defaultLocale: 'zh-CN'`：URL 完全不变。
+  原因是站点 `nitro.preset: 'static'` —— 构建期只渲染一份 HTML，
+  **请求头 `Accept-Language` 对页面 HTML 不起作用**，语言只能在客户端按浏览器偏好（`navigator.languages`）切。
+  要「按请求头出不同 HTML」必须改成 SSR 或前缀式 URL，二者都要动 SSG 部署链路。
+- 翻译文件 `i18n/locales/{zh-CN,en}.json`（`restructureDir: 'i18n'`、`langDir: 'locales'` 都是默认值；
+  **用了 langDir 时每个 locale 的 `file` 是必填**，漏了直接抛错）。
+- `detectBrowserLanguage: { useCookie: false, fallbackLocale: 'zh-CN' }` —— 刻意不落 cookie：
+  没有切换按钮时，把检测结果存下来会让用户改了浏览器语言仍被旧值压住、且无从改回。
+- **`<html lang>` 不会自动设**：`app.vue` 自己 `useHead({ htmlAttrs: { lang } })`（取 `localeProperties`）。
+  别用 `useLocaleHead()`：no_prefix 下它输出的 canonical / hreflang 只会指向页面自己，还刷 baseUrl 警告。
+- UI 文案一律 `$t()`；站点名 / 描述在 `composables/useSiteMeta.ts`（原 `utils/site.ts` 已删）。
+- 纯 util 需要本地化文案时用「入参注入」，别在 util 里调 i18n：
+  热力图 = `WEEKDAY_KEYS` + `DEFAULT_WEEKDAY_LABELS` 兜底，`buildHeatmapGrid({ weekdayLabels })`。
+
 ## 验证手法（Vue/Nuxt 页面）
-- Node 22 全局 `WebSocket` + `fetch` 可零依赖走 CDP 驱动本机 headless Chrome。
+- Node 22 全局 `WebSocket` + `fetch` 可零依赖走 CDP 驱动本机 headless Chrome
+  （本机路径 `C:\Program Files\Google\Chrome\Application\chrome.exe`）。
   脚本用 `node --input-type=module - <<'EOF'` 从 stdin 喂进去（不留文件），抓
   `Runtime.consoleAPICalled`（含 `stackTrace`）能直接定位是哪个组件的警告。
+- **必须同时开 `Log` 和 `Network` 域**：只开 `Runtime` 看不到资源加载失败，
+  「一条 console 消息都没有」其实是客户端 JS 压根没跑，不是「没问题」。
+  要看 `Log.entryAdded`、`Network.loadingFailed`、以及 4xx/5xx 的 `responseReceived`。
+- **不要用固定 sleep 等挂载**：全新 dev server 首次按需编译客户端模块可能要几十秒；
+  要轮询到某个只在客户端出现的元素（如 `.theme-toggle__btn`）再断言。
+- **端口以 dev 日志为准**：3000 被占时 Nuxt 会自动退到 3001（日志里 `[get-port] Unable to find...`），
+  而沙箱里的 `Get-NetTCPConnection` 看不到占用者 → 会一直打到旧 server 上，查半天假问题。
 - 纯静态检查更轻：`curl http://[::1]:3000/_nuxt/<模块路径>` 拿 Vite 编译产物（CSS 里 `\n`、`\\:` 是转义）。
 - dev server 只监听 IPv6：用 `[::1]:3000`（127.0.0.1 连不上）。改 `nuxt.config.ts` 会自动重启，重启期间请求会返回错误页。
 - PowerShell 重定向是 UTF-16：`Get-Content -Encoding Unicode x | Set-Content -Encoding utf8 y` 后再读。

@@ -12,7 +12,12 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{ label?: string }>(), { label: '加载中' })
+const props = defineProps<{ label?: string }>()
+
+const { t } = useI18n()
+
+// 没显式传 label 就跟随站点语言（默认「加载中 / Loading」）
+const label = computed(() => props.label ?? t('common.loading'))
 </script>
 
 <style lang="scss" scoped>

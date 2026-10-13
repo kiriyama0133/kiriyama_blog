@@ -1,0 +1,66 @@
+{
+  "site": {
+    "name": "Blog",
+    "description": "Personal frontend notes — Vue / Nuxt / tooling"
+  },
+  "common": {
+    "loading": "Loading"
+  },
+  "home": {
+    "seoTitle": "All notes",
+    "chartButton": "Charts",
+    "chartButtonAria": "View category distribution chart",
+    "filtered": "Showing {shown} / {total}",
+    "clearFilters": "Clear filters",
+    "totalDocs": "{total} notes in total",
+    "empty": "No matching notes. Try another keyword or type."
+  },
+  "search": {
+    "placeholder": "Search notes…",
+    "label": "Search notes",
+    "noResults": "No matching content",
+    "clear": "Clear search"
+  },
+  "typeFilter": {
+    "all": "All types",
+    "count": "{count} types",
+    "label": "Filter by type",
+    "empty": "No types to filter yet"
+  },
+  "actions": {
+    "back": "Back",
+    "share": "Share",
+    "backToTop": "Back to top"
+  },
+  "theme": {
+    "toLight": "Switch to light",
+    "toDark": "Switch to dark"
+  },
+  "card": {
+    "defaultTitle": "Untitled",
+    "defaultSummary": "No summary"
+  },
+  "chart": {
+    "categoryTitle": "Category share"
+  },
+  "heatmap": {
+    "title": "Update heatmap",
+    "meta": "{start} ~ {end} · {days} active days · {total} notes",
+    "empty": "No `date` field in frontmatter yet — heatmap unavailable",
+    "tooltipDate": "{date} {weekday}",
+    "tooltipCount": "{count} notes"
+  },
+  "weekday": {
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
+  },
+  "notice": {
+    "linkCopied": "Link copied",
+    "shareUnsupported": "Sharing is not supported in this browser"
+  }
+}

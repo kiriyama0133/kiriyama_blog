@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useClipboard, useShare } from '@vueuse/core'
 import { useReaderStore } from '~/stores/reader'
-import { pageTitle } from '~/utils/site'
+import { useSiteMeta } from '~/composables/useSiteMeta'
 import { useNotice } from '~/composables/useNotice'
 
 /**
@@ -10,6 +10,8 @@ import { useNotice } from '~/composables/useNotice'
 export function useShareNote() {
   const reader = useReaderStore()
   const { notify } = useNotice()
+  const { t } = useI18n()
+  const { pageTitle } = useSiteMeta()
 
   const title = computed(() => pageTitle(reader.title))
   const text = computed(() => reader.description || undefined)
@@ -38,11 +40,11 @@ export function useShareNote() {
 
     if (canCopy.value && url.value) {
       await copy(url.value)
-      notify('链接已复制')
+      notify(t('notice.linkCopied'))
       return
     }
 
-    notify('当前浏览器不支持分享')
+    notify(t('notice.shareUnsupported'))
   }
 
   return { title, text, url, isSupported, shareNote }

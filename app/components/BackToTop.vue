@@ -23,9 +23,14 @@ function toTop() {
     <Transition name="btt">
       <div v-show="visible" class="back-to-top">
         <div class="container back-to-top__inner">
-          <button type="button" class="btn back-to-top__btn" aria-label="回到顶部" @click="toTop">
+          <button
+            type="button"
+            class="btn back-to-top__btn"
+            :aria-label="$t('actions.backToTop')"
+            @click="toTop"
+          >
             <span class="back-to-top__icon" :style="iconStyle" aria-hidden="true" />
-            <span class="back-to-top__label">回到顶部</span>
+            <span class="back-to-top__label">{{ $t('actions.backToTop') }}</span>
           </button>
         </div>
       </div>

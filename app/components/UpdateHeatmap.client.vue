@@ -1,12 +1,12 @@
 <template>
   <div ref="wrapper" class="update-heatmap">
     <div class="head">
-      <h3 class="head__title">更新热力图</h3>
+      <h3 class="head__title">{{ t('heatmap.title') }}</h3>
       <p class="head__meta">{{ meta }}</p>
     </div>
 
     <VueUiHeatmap v-if="hasData && layoutWidth > 0" :dataset="grid.dataset" :config="config" />
-    <p v-else-if="!hasData" class="empty">笔记里还没有写 `date`，暂时画不出热力图</p>
+    <p v-else-if="!hasData" class="empty">{{ t('heatmap.empty') }}</p>
   </div>
 </template>
 
@@ -16,15 +16,15 @@ import 'vue-data-ui/style.css'
 import type { VueUiHeatmapDatapoint } from 'vue-data-ui'
 import { useElementSize } from '@vueuse/core'
 import { useUpdateHeatmap } from '~/composables/useUpdateHeatmap'
-import { WEEKDAY_LABELS, shiftDayKey } from '~/utils/heatmap'
+import { shiftDayKey } from '~/utils/heatmap'
 
 const MAX_CHART_WIDTH = 560
 const CELL_TARGET = 16
 const CHART_CHROME = 150
 
+const { t } = useI18n()
 const { grid, hasData } = useUpdateHeatmap()
 
-const WEEKDAY_ORDER: string[] = [...WEEKDAY_LABELS]
 const wrapper = ref<HTMLElement | null>(null)
 const { width: availableWidth } = useElementSize(wrapper)
 
@@ -37,7 +37,7 @@ const layoutWidth = computed(() => {
 const meta = computed(() => {
   if (!hasData.value) return ''
   const { start, end, activeDays, total } = grid.value
-  return `${start} ~ ${end} · ${activeDays} 天有更新 · 共 ${total} 篇`
+  return t('heatmap.meta', { start, end, days: activeDays, total })
 })
 
 const { isDark } = useTheme()
@@ -135,18 +135,24 @@ function tooltipFormat(params: {
   const datapoint = params.datapoint
   if (!datapoint) return ''
 
-  const rowIndex = WEEKDAY_ORDER.indexOf(datapoint.yAxisName ?? '')
+  const rowIndex = grid.value.yLabels.indexOf(datapoint.yAxisName ?? '')
   const column = params.series?.[params.seriesIndex ?? 0]?.temperatures ?? []
   const columnIndex = column.findIndex((cell) => cell.id === datapoint.id)
   const monday = grid.value.columnDates[columnIndex] ?? ''
   const date = monday && rowIndex >= 0 ? shiftDayKey(monday, rowIndex) : ''
   const count = typeof datapoint.value === 'number' ? datapoint.value : 0
 
+  const heading = t('heatmap.tooltipDate', {
+    date: date || '—',
+    weekday: datapoint.yAxisName ?? ''
+  })
+  const label = t('heatmap.tooltipCount', { count })
+
   return `<div style="line-height:1.6">
-    <div style="font-weight:700">${date || '—'} 周${datapoint.yAxisName ?? ''}</div>
+    <div style="font-weight:700">${heading}</div>
     <div style="display:flex;align-items:center;gap:6px">
       <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${datapoint.color}"></span>
-      <span>${count} 篇</span>
+      <span>${label}</span>
     </div>
   </div>`
 }
