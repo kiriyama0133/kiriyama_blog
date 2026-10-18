@@ -70,7 +70,7 @@ definePageMeta({
 </script>
 
 <template>
-  <div class="container p-8">
+  <div class="container px-4 sm:px-8 md:px-16 lg:px-36 xl:px-42 py-10">
     <div v-if="page" class="markdown-body mt-10">
       <h1 v-if="showTitle" class="doc-title">{{ article?.title }}</h1>
       <time v-if="date" class="doc-date" :datetime="date">{{ date }}</time>

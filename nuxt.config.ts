@@ -3,7 +3,14 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineNuxtConfig({
   css: ['~/assets/css/main.css', '~/assets/css/main.scss'],
-  modules: ['@nuxt/content', '@pinia/nuxt', '@vueuse/nuxt', '@nuxt/eslint', '@nuxtjs/i18n'],
+  modules: [
+    '@nuxt/content',
+    '@pinia/nuxt',
+    '@vueuse/nuxt',
+    '@nuxt/eslint',
+    '@nuxtjs/i18n',
+    'gsap-nuxt-module'
+  ],
   i18n: {
     // 站点是静态部署（nitro.preset = static），且现有笔记 URL 全在根路径。
     // no_prefix = URL 完全不变，对 SSG 与 nginx 零影响，现有笔记链接一个都不用动。
