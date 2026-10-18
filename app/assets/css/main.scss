@@ -237,9 +237,10 @@ $font-mono:
     }
 
     /* ----- 内联 SVG（笔记里手写的图表） -----
-       模块 svg-attribute-fix 会给根 svg 注入 max-width:min(<viewBox宽>px,100%)，
-       这里只负责居中与比例：display 复位成 block（preflight 已经是 block，写明是为了不依赖它），
-       height:auto 保证宽高比跟着 viewBox 走。注意 .mermaid svg 更具体，会盖过这里。 */
+       属性名由 modules/svg-attributes.ts 在内容解析阶段修正回 text-anchor / font-size 这类
+       带连字符的名字（内容管线原本会写成驼峰，浏览器直接丢弃）。这里只负责布局：
+       display 复位成 block（preflight 已经是 block，写明是为了不依赖它），
+       height:auto 让宽高比跟着 viewBox 走。注意 .mermaid svg 更具体，会盖过这里。 */
     svg {
       display: block;
       max-width: 100%;

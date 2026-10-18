@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
+import { gsap } from 'gsap'
 import { onKeyStroke, onClickOutside } from '@vueuse/core'
 import { useContentStore } from '~/stores/content'
 
@@ -7,10 +8,33 @@ const store = useContentStore()
 const { t } = useI18n()
 
 const root = ref<HTMLElement | null>(null)
+const panelRef = ref<HTMLElement | null>(null)
 const open = ref(false)
 
 onClickOutside(root, () => (open.value = false))
 onKeyStroke('Escape', () => (open.value = false))
+
+/** 展开后让 tag 选项依次弹进来；back.out(2) 的 2 是过冲幅度，stagger 0.01 = 每个晚 10ms */
+async function toggle() {
+  open.value = !open.value
+  if (!open.value) return
+
+  await nextTick()
+
+  const tags = panelRef.value?.querySelectorAll('.item')
+  if (!tags?.length) return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+  gsap.from(tags, {
+    opacity: 0,
+    x: -12,
+    duration: 0.4,
+    ease: 'back.out(2)',
+    stagger: 0.02,
+    // 动画结束把内联样式交还给 CSS，别留下 transform
+    clearProps: 'transform,opacity'
+  })
+}
 
 /** 一个都没选 = 看全部 */
 const allActive = computed(() => store.activeTypes.length === 0)
@@ -53,7 +77,7 @@ function selectAll() {
       "
       :aria-expanded="open"
       aria-haspopup="listbox"
-      @click="open = !open"
+      @click="toggle"
     >
       <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 16 16" aria-hidden="true">
         <path
@@ -87,6 +111,7 @@ function selectAll() {
     <Transition name="td">
       <div
         v-if="open"
+        ref="panelRef"
         class="panel absolute left-0 top-full z-50 mt-1.5 w-52 rounded-2xl border border-light-menu-border bg-light-menu p-1.5 shadow-lg dark:border-dark-menu-border dark:bg-dark-menu"
         role="listbox"
         aria-multiselectable="true"

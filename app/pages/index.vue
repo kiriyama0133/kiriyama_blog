@@ -4,6 +4,7 @@ import { useContentStore } from '~/stores/content'
 import BlogCard from '~/components/BlogCard.vue'
 import Search from '~/components/Search.vue'
 import TypeDropdown from '~/components/TypeDropdown.vue'
+import GsapMarquee from '~/components/gsap/GsapMarquee.vue'
 import chartIcon from '~/assets/image/align-bottom-svgrepo-com.svg'
 import { useSiteMeta } from '~/composables/useSiteMeta'
 
@@ -65,6 +66,8 @@ const chartIconStyle = {
     </header>
 
     <div class="container index-body">
+      <GsapMarquee class="marquee-strip" />
+
       <p class="filter-meta text-light-font dark:text-dark-font">
         <span v-if="store.hasFilters">
           {{ t('home.filtered', { shown: store.filteredCount, total: store.totalCount }) }}
@@ -139,6 +142,11 @@ $filter-bar-h: 4rem;
 // 给固定条让位
 .index-body {
   padding-block: calc(#{$filter-bar-h} + 1.25rem) 3rem;
+}
+
+// 技术栈跑马灯：和页面同底色，只靠上下两根发丝线分隔；下面留点距离给统计行
+.marquee-strip {
+  margin-bottom: 1.25rem;
 }
 
 .chart-btn {
