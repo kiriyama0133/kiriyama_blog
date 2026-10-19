@@ -1,12 +1,11 @@
 import { storeToRefs } from 'pinia'
-import {
-  RUNNABLE_LANG_MAP,
-  usePlaygroundStore,
-  type PlaygroundLanguage,
-  type PlaygroundOpenOptions,
-  type WebFiles,
-  type WebTab
+import type {
+  PlaygroundLanguage,
+  PlaygroundOpenOptions,
+  WebFiles,
+  WebTab
 } from '~/stores/playground'
+import { RUNNABLE_LANG_MAP, usePlaygroundStore } from '~/stores/playground'
 
 export type { PlaygroundLanguage, PlaygroundOpenOptions, WebFiles, WebTab }
 

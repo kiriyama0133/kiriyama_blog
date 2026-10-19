@@ -255,13 +255,12 @@ import type { PlaygroundLanguage, WebFiles, WebTab } from '~/composables/usePlay
 import { usePlayground } from '~/composables/usePlayground'
 import { DEFAULT_LANGUAGE_SNIPPETS } from '~/stores/playground'
 import { useTheme } from '~/composables/useTheme'
-import type {
-  ConsoleEntry,
+import type { ConsoleEntry, RunDiagnostic } from '~/utils/code-runner'
+import {
   runPlaygroundCode,
   validateCSharpCode,
   ensureCSharpRunner,
-  ensureClangCompiler,
-  type RunDiagnostic
+  ensureClangCompiler
 } from '~/utils/code-runner'
 import { registerCSharpIntelliSense } from '~/utils/csharp-intellisense'
 import { registerCppIntelliSense } from '~/utils/cpp-intellisense'
