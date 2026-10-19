@@ -46,7 +46,7 @@ const chartIconStyle = {
 
 <template>
   <div class="index-page">
-    <ClientOnly><Dialog v-model="showDialog" /></ClientOnly>
+    <ClientOnly><ChartDialog v-model="showDialog" /></ClientOnly>
     <!-- 固定在顶部：半透明底 + backdrop-blur，卡片从下面滚过时在衔接处被糊掉 -->
     <header class="filter-bar">
       <div class="container filter-bar__inner">

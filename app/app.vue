@@ -9,6 +9,8 @@
   <Notice />
   <!-- 明暗切换：和 FloatingMenu 同一行的右侧 -->
   <ThemeToggle />
+  <!-- 全站唯一的代码演练场弹窗，状态在 composables/usePlayground.ts -->
+  <ClientOnly><PlaygroundDialog /></ClientOnly>
 </template>
 
 <script setup lang="ts">

@@ -62,5 +62,19 @@
   "notice": {
     "linkCopied": "链接已复制",
     "shareUnsupported": "当前浏览器不支持分享"
+  },
+  "playground": {
+    "openInPlayground": "在 Playground 中编辑并运行",
+    "selectLanguage": "选择运行语言",
+    "run": "运行",
+    "running": "运行中…",
+    "runShortcut": "运行代码 (Ctrl+Enter)",
+    "reset": "重置",
+    "clear": "清空",
+    "close": "关闭",
+    "output": "控制台输出",
+    "emptyOutput": "点击上方「运行」或按 Ctrl+Enter 查看输出…",
+    "editorAria": "代码编辑器",
+    "outputAria": "运行结果输出"
   }
 }

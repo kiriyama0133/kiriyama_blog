@@ -62,5 +62,19 @@
   "notice": {
     "linkCopied": "Link copied",
     "shareUnsupported": "Sharing is not supported in this browser"
+  },
+  "playground": {
+    "openInPlayground": "Edit and run in Playground",
+    "selectLanguage": "Select language",
+    "run": "Run",
+    "running": "Running…",
+    "runShortcut": "Run code (Ctrl+Enter)",
+    "reset": "Reset",
+    "clear": "Clear",
+    "close": "Close",
+    "output": "Console Output",
+    "emptyOutput": "Click Run or press Ctrl+Enter to see output…",
+    "editorAria": "Code editor",
+    "outputAria": "Execution output"
   }
 }

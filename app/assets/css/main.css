@@ -84,6 +84,12 @@
    */
   --ui-heat-cold: #e7e5d6;
   --ui-heat-hot: #7d8065;
+  --ui-code-bg: #f6f8fa;
+  --ui-menu: #f7f5e6;
+  --ui-menu-hover: #ebe9d6;
+  --ui-menu-border: #e0ddc4;
+  --ui-btn: #d6d8b7;
+  --ui-btn-hover: #969780;
 }
 
 /* 首页：固定筛选条高 4rem（+1.25rem 渐隐），浮动按钮那一行整体让到它下面 */
@@ -114,6 +120,12 @@ body:has(.filter-bar) {
   /* 暗色下冷端要暗但不等于画布（否则整块糊在一起），热端提亮 */
   --ui-heat-cold: #34372a;
   --ui-heat-hot: #b3b98f;
+  --ui-code-bg: #1f1f29;
+  --ui-menu: #24231a;
+  --ui-menu-hover: #302f23;
+  --ui-menu-border: #3f3d2c;
+  --ui-btn: #34372a;
+  --ui-btn-hover: #4f5340;
 }
 
 @layer utilities {
