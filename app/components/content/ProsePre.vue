@@ -2,7 +2,7 @@
   ProsePre 覆写（@nuxtjs/mdc 的默认实现就是 <pre :class><slot /></pre>，
   高亮在 AST 阶段已经完成，slot 里就是高亮后的节点）：
   - ```mermaid 代码块 → MermaidBlock，客户端渲染成 SVG
-  - 可运行语言（ts/js/csharp）→ 右上角提供打开 Playground Dialog 的 SVG 图标按钮
+  - 可运行语言（html/ts/js/csharp/c/cpp）→ 右上角提供打开 Playground Dialog 的 SVG 图标按钮
   - 其余语言 → 和默认实现完全一致
 -->
 <script setup lang="ts">

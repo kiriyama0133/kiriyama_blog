@@ -1,23 +1,17 @@
-export type PlaygroundLanguage = 'typescript' | 'javascript' | 'csharp'
+import { storeToRefs } from 'pinia'
+import {
+  RUNNABLE_LANG_MAP,
+  usePlaygroundStore,
+  type PlaygroundLanguage,
+  type PlaygroundOpenOptions,
+  type WebFiles,
+  type WebTab
+} from '~/stores/playground'
 
-export interface PlaygroundOpenOptions {
-  code: string
-  language?: string
-  filename?: string
-}
-
-const RUNNABLE_LANG_MAP: Record<string, PlaygroundLanguage> = {
-  ts: 'typescript',
-  typescript: 'typescript',
-  js: 'javascript',
-  javascript: 'javascript',
-  cs: 'csharp',
-  csharp: 'csharp',
-  'c#': 'csharp'
-}
+export type { PlaygroundLanguage, PlaygroundOpenOptions, WebFiles, WebTab }
 
 /**
- * 判断代码块语言是否支持进入 Playground
+ * 判断代码块语言是否支持进入 Playground（仅拦截 html / ts / js / csharp / c / cpp）
  */
 export function isRunnableLanguage(lang?: string): boolean {
   if (!lang) return false
@@ -30,40 +24,39 @@ export function normalizePlaygroundLanguage(lang?: string): PlaygroundLanguage {
 }
 
 /**
- * 全站共享的 Playground 弹窗状态（类似 useNotice，在 app.vue 挂载唯一实例）
+ * 基于 Pinia Store (stores/playground.ts) 的组合式封装
  */
 export function usePlayground() {
-  const isOpen = useState<boolean>('playground-open', () => false)
-  const code = useState<string>('playground-code', () => '')
-  const initialCode = useState<string>('playground-initial-code', () => '')
-  const language = useState<PlaygroundLanguage>('playground-lang', () => 'typescript')
-  const filename = useState<string>('playground-filename', () => '')
-
-  function openPlayground(options: PlaygroundOpenOptions) {
-    const trimmed = options.code.replace(/\n$/, '')
-    initialCode.value = trimmed
-    code.value = trimmed
-    language.value = normalizePlaygroundLanguage(options.language)
-    filename.value = options.filename ?? ''
-    isOpen.value = true
-  }
-
-  function resetCode() {
-    code.value = initialCode.value
-  }
-
-  function closePlayground() {
-    isOpen.value = false
-  }
+  const store = usePlaygroundStore()
+  const {
+    isOpen,
+    code,
+    initialCode,
+    language,
+    originLanguage,
+    filename,
+    langCodeMap,
+    activeWebTab,
+    webFiles,
+    initialWebFiles,
+    isWebMode
+  } = storeToRefs(store)
 
   return {
     isOpen,
     code,
     initialCode,
     language,
+    originLanguage,
     filename,
-    openPlayground,
-    resetCode,
-    closePlayground
+    langCodeMap,
+    activeWebTab,
+    webFiles,
+    initialWebFiles,
+    isWebMode,
+    openPlayground: store.openPlayground,
+    setWebTab: store.setWebTab,
+    resetCode: store.resetCode,
+    closePlayground: store.closePlayground
   }
 }

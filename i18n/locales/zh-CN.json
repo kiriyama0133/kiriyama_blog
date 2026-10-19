@@ -72,6 +72,8 @@
     "reset": "重置",
     "clear": "清空",
     "close": "关闭",
+    "preview": "实时预览",
+    "console": "控制台",
     "output": "控制台输出",
     "emptyOutput": "点击上方「运行」或按 Ctrl+Enter 查看输出…",
     "editorAria": "代码编辑器",

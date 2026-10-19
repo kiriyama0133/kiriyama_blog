@@ -72,6 +72,8 @@
     "reset": "Reset",
     "clear": "Clear",
     "close": "Close",
+    "preview": "Live Preview",
+    "console": "Console",
     "output": "Console Output",
     "emptyOutput": "Click Run or press Ctrl+Enter to see output…",
     "editorAria": "Code editor",

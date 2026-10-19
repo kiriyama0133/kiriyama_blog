@@ -96,54 +96,152 @@
         </div>
       </header>
 
-      <!-- 主体分栏：左侧 Monaco IDE 区域，右侧运行输出区域 -->
+      <!-- 主体分栏：左侧 Monaco IDE 区域（Web 模式下带 HTML/CSS/JS Tab），右侧 iframe 预览或控制台输出 -->
       <div class="pg-body">
         <section class="pg-editor-pane" :aria-label="t('playground.editorAria')">
-          <div v-if="editorLoading" class="pg-editor-loading">
-            <SpinCircle />
-          </div>
-          <div ref="editorContainerRef" class="pg-editor-host" />
-        </section>
-
-        <section class="pg-output-pane" :aria-label="t('playground.outputAria')">
-          <div class="pg-output-header">
-            <div class="pg-output-header__meta">
-              <span class="pg-output-title">{{ t('playground.output') }}</span>
-              <span v-if="lastDurationMs !== null" class="pg-duration">
-                {{ lastDurationMs }} ms
-              </span>
-            </div>
-
+          <!-- Web 模式专属顶部 HTML / CSS / JS 标签栏 -->
+          <div v-if="isWebMode" class="pg-web-tabs" role="tablist">
             <button
+              v-for="tab in webTabOptions"
+              :key="tab.value"
               type="button"
-              class="pg-clear-btn"
-              :title="t('playground.clear')"
-              :aria-label="t('playground.clear')"
-              @click="clearOutput"
+              role="tab"
+              class="pg-web-tab"
+              :class="{ 'pg-web-tab--active': activeWebTab === tab.value }"
+              :aria-selected="activeWebTab === tab.value"
+              @click="handleSelectWebTab(tab.value)"
             >
-              <span class="icon" :style="trashIconStyle" aria-hidden="true" />
-              <span class="pg-clear-btn__label">{{ t('playground.clear') }}</span>
+              <span class="pg-web-tab__ext" :class="`pg-web-tab__ext--${tab.value}`">{{
+                tab.badge
+              }}</span>
+              <span>{{ tab.label }}</span>
+              <span v-if="hasWebTabContent(tab.value)" class="pg-web-tab__dot" aria-hidden="true" />
             </button>
           </div>
 
-          <div class="pg-output-body">
-            <p v-if="!logs.length && !errorMsg && !running" class="pg-output-empty">
-              {{ t('playground.emptyOutput') }}
-            </p>
-
-            <div
-              v-for="(entry, idx) in logs"
-              :key="idx"
-              class="pg-log-item"
-              :class="`pg-log-item--${entry.level}`"
-            >
-              <pre class="pg-log-text">{{ entry.text }}</pre>
+          <div class="pg-editor-wrap">
+            <div v-if="editorLoading" class="pg-editor-loading">
+              <SpinCircle />
             </div>
-
-            <div v-if="errorMsg" class="pg-log-item pg-log-item--error">
-              <pre class="pg-log-text">{{ errorMsg }}</pre>
-            </div>
+            <div ref="editorContainerRef" class="pg-editor-host" />
           </div>
+        </section>
+
+        <!-- 右侧：Web 模式下为实时 iframe 预览 + 底部可折叠控制台；其他语言为纯控制台输出 -->
+        <section class="pg-output-pane" :aria-label="t('playground.outputAria')">
+          <template v-if="isWebMode">
+            <div class="pg-output-header">
+              <div class="pg-output-header__meta">
+                <span class="pg-output-title">{{ t('playground.preview') }}</span>
+                <span class="pg-duration">HTML / CSS / JS</span>
+              </div>
+
+              <div class="pg-output-header__right">
+                <button
+                  type="button"
+                  class="pg-console-toggle"
+                  :class="{ 'pg-console-toggle--active': webConsoleOpen }"
+                  @click="webConsoleOpen = !webConsoleOpen"
+                >
+                  <span>{{ t('playground.console') }}</span>
+                  <span
+                    v-if="logs.length || errorMsg"
+                    class="pg-console-badge"
+                    :class="{ 'pg-console-badge--error': Boolean(errorMsg) }"
+                  >
+                    {{ errorMsg ? '!' : logs.length }}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div class="pg-preview-stage">
+              <iframe
+                ref="previewIframeRef"
+                class="pg-preview-iframe"
+                title="Playground Web Preview"
+                sandbox="allow-scripts allow-modals"
+                :srcdoc="iframeSrcDoc"
+              />
+            </div>
+
+            <!-- Web 模式底部可折叠 Console 抽屉 -->
+            <div v-if="webConsoleOpen" class="pg-web-console">
+              <div class="pg-output-header pg-web-console__header">
+                <span class="pg-output-title">{{ t('playground.console') }}</span>
+                <button
+                  type="button"
+                  class="pg-clear-btn"
+                  :title="t('playground.clear')"
+                  :aria-label="t('playground.clear')"
+                  @click="clearOutput"
+                >
+                  <span class="icon" :style="trashIconStyle" aria-hidden="true" />
+                  <span class="pg-clear-btn__label">{{ t('playground.clear') }}</span>
+                </button>
+              </div>
+
+              <div class="pg-output-body pg-web-console__body">
+                <p v-if="!logs.length && !errorMsg" class="pg-output-empty">
+                  {{ t('playground.emptyOutput') }}
+                </p>
+
+                <div
+                  v-for="(entry, idx) in logs"
+                  :key="idx"
+                  class="pg-log-item"
+                  :class="`pg-log-item--${entry.level}`"
+                >
+                  <pre class="pg-log-text">{{ entry.text }}</pre>
+                </div>
+
+                <div v-if="errorMsg" class="pg-log-item pg-log-item--error">
+                  <pre class="pg-log-text">{{ errorMsg }}</pre>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <template v-else>
+            <div class="pg-output-header">
+              <div class="pg-output-header__meta">
+                <span class="pg-output-title">{{ t('playground.output') }}</span>
+                <span v-if="lastDurationMs !== null" class="pg-duration">
+                  {{ lastDurationMs }} ms
+                </span>
+              </div>
+
+              <button
+                type="button"
+                class="pg-clear-btn"
+                :title="t('playground.clear')"
+                :aria-label="t('playground.clear')"
+                @click="clearOutput"
+              >
+                <span class="icon" :style="trashIconStyle" aria-hidden="true" />
+                <span class="pg-clear-btn__label">{{ t('playground.clear') }}</span>
+              </button>
+            </div>
+
+            <div class="pg-output-body">
+              <p v-if="!logs.length && !errorMsg && !running" class="pg-output-empty">
+                {{ t('playground.emptyOutput') }}
+              </p>
+
+              <div
+                v-for="(entry, idx) in logs"
+                :key="idx"
+                class="pg-log-item"
+                :class="`pg-log-item--${entry.level}`"
+              >
+                <pre class="pg-log-text">{{ entry.text }}</pre>
+              </div>
+
+              <div v-if="errorMsg" class="pg-log-item pg-log-item--error">
+                <pre class="pg-log-text">{{ errorMsg }}</pre>
+              </div>
+            </div>
+          </template>
         </section>
       </div>
     </div>
@@ -151,13 +249,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { onClickOutside } from '@vueuse/core'
-import type { PlaygroundLanguage } from '~/composables/usePlayground'
+import type { PlaygroundLanguage, WebFiles, WebTab } from '~/composables/usePlayground'
 import { usePlayground } from '~/composables/usePlayground'
+import { DEFAULT_LANGUAGE_SNIPPETS } from '~/stores/playground'
 import { useTheme } from '~/composables/useTheme'
-import type { ConsoleEntry } from '~/utils/code-runner'
-import { runPlaygroundCode } from '~/utils/code-runner'
+import type {
+  ConsoleEntry,
+  runPlaygroundCode,
+  validateCSharpCode,
+  ensureCSharpRunner,
+  ensureClangCompiler,
+  type RunDiagnostic
+} from '~/utils/code-runner'
+import { registerCSharpIntelliSense } from '~/utils/csharp-intellisense'
+import { registerCppIntelliSense } from '~/utils/cpp-intellisense'
 
 import playIcon from '~/assets/image/play-svgrepo-com.svg'
 import restartIcon from '~/assets/image/restart-svgrepo-com.svg'
@@ -167,7 +274,19 @@ import codeIcon from '~/assets/image/code-square-svgrepo-com.svg'
 
 const { t } = useI18n()
 const { isDark } = useTheme()
-const { isOpen, code, language, filename, resetCode, closePlayground } = usePlayground()
+const {
+  isOpen,
+  code,
+  language,
+  filename,
+  langCodeMap,
+  activeWebTab,
+  webFiles,
+  isWebMode,
+  setWebTab,
+  resetCode,
+  closePlayground
+} = usePlayground()
 
 const langDropdownRef = ref<HTMLElement | null>(null)
 const langMenuOpen = ref(false)
@@ -176,10 +295,23 @@ onClickOutside(langDropdownRef, () => {
 })
 
 const languageOptions: Array<{ value: PlaygroundLanguage; label: string; badge?: string }> = [
+  { value: 'html', label: 'Web (HTML/CSS/JS)', badge: 'DOM' },
   { value: 'typescript', label: 'TypeScript', badge: 'TS' },
   { value: 'javascript', label: 'JavaScript', badge: 'JS' },
-  { value: 'csharp', label: 'C# (.NET)', badge: 'WASM' }
+  { value: 'csharp', label: 'C# (.NET)', badge: 'WASM' },
+  { value: 'c', label: 'C (Clang)', badge: 'WASM' },
+  { value: 'cpp', label: 'C++ (Clang)', badge: 'WASM' }
 ]
+
+const webTabOptions: Array<{ value: WebTab; label: string; badge: string }> = [
+  { value: 'html', label: 'index.html', badge: 'HTML' },
+  { value: 'css', label: 'style.css', badge: 'CSS' },
+  { value: 'javascript', label: 'script.js', badge: 'JS' }
+]
+
+function hasWebTabContent(tab: WebTab): boolean {
+  return Boolean(webFiles.value[tab]?.trim())
+}
 
 const currentLangLabel = computed(
   () => languageOptions.find((o) => o.value === language.value)?.label ?? 'TypeScript'
@@ -204,33 +336,177 @@ const logs = ref<ConsoleEntry[]>([])
 const errorMsg = ref<string>('')
 const lastDurationMs = ref<number | null>(null)
 
+// Web 预览状态（iframe srcdoc + 底部可折叠控制台）
+const previewIframeRef = ref<HTMLIFrameElement | null>(null)
+const iframeSrcDoc = ref('')
+const webConsoleOpen = ref(false)
+let webPreviewTimer: ReturnType<typeof setTimeout> | null = null
+let previewRunSeq = 0
+
 function clearOutput() {
   logs.value = []
   errorMsg.value = ''
   lastDurationMs.value = null
 }
 
-// Monaco Editor 按需加载与实例管理
+/**
+ * 构建注入到右侧 iframe 的完整文档：
+ * - 包含 #pg-live-style 标签，支持修改 CSS Tab 时通过 postMessage 零闪烁热更新
+ * - 包含 console 与异常拦截桥接脚本，将 JS Tab 的日志实时同步回父窗口
+ */
+function buildIframeDocument(files: WebFiles, seq: number): string {
+  const closeScriptTag = '</scr' + 'ipt>'
+  const safeJs = files.javascript.replace(/<\/script>/gi, '<\\/script>')
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style id="pg-base-style">
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1f1f29;
+      background: transparent;
+    }
+  </style>
+  <style id="pg-live-style">${files.css}</style>
+  <script>
+    (function() {
+      var formatVal = function(v) {
+        if (v === undefined) return 'undefined';
+        if (v === null) return 'null';
+        if (typeof v === 'string') return v;
+        if (v instanceof Error) return v.stack || (v.name + ': ' + v.message);
+        if (typeof v === 'object') {
+          try { return JSON.stringify(v, null, 2); } catch (e) { return String(v); }
+        }
+        return String(v);
+      };
+      var send = function(type, payload) {
+        try {
+          window.parent.postMessage(Object.assign({ source: 'kiriyama-pg-iframe', seq: ${seq}, type: type }, payload), '*');
+        } catch (e) {}
+      };
+      ['log', 'info', 'warn', 'error'].forEach(function(level) {
+        var orig = console[level];
+        console[level] = function() {
+          var args = Array.prototype.slice.call(arguments);
+          send('log', { level: level, text: args.map(formatVal).join(' '), timestamp: Date.now() });
+          if (orig) orig.apply(console, args);
+        };
+      });
+      window.addEventListener('error', function(e) {
+        send('error', { error: e.message || 'Runtime Error' });
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        send('error', { error: 'Unhandled Promise Rejection: ' + formatVal(e.reason) });
+      });
+      window.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'pg-update-css') {
+          var styleEl = document.getElementById('pg-live-style');
+          if (styleEl) styleEl.textContent = e.data.css;
+        }
+      });
+    })();
+  ${closeScriptTag}
+</head>
+<body>
+${files.html}
+<script>
+try {
+${safeJs}
+} catch (err) {
+  window.parent.postMessage({
+    source: 'kiriyama-pg-iframe',
+    seq: ${seq},
+    type: 'error',
+    error: err instanceof Error ? (err.stack || err.message) : String(err)
+  }, '*');
+}
+${closeScriptTag}
+</body>
+</html>`
+}
+
+function rebuildWebPreviewImmediate() {
+  if (webPreviewTimer) {
+    clearTimeout(webPreviewTimer)
+    webPreviewTimer = null
+  }
+  clearOutput()
+  iframeSrcDoc.value = buildIframeDocument(webFiles.value, ++previewRunSeq)
+}
+
+function scheduleWebPreviewUpdate(changedTab: WebTab) {
+  // 如果仅修改了 CSS Tab，且 iframe 已经渲染，直接通过 postMessage 热更新样式（0ms 无闪烁，保留 DOM 状态与动画）
+  if (changedTab === 'css' && iframeSrcDoc.value && previewIframeRef.value?.contentWindow) {
+    previewIframeRef.value.contentWindow.postMessage(
+      {
+        type: 'pg-update-css',
+        css: webFiles.value.css
+      },
+      '*'
+    )
+    return
+  }
+
+  if (webPreviewTimer) {
+    clearTimeout(webPreviewTimer)
+  }
+  webPreviewTimer = setTimeout(() => {
+    rebuildWebPreviewImmediate()
+  }, 320)
+}
+
+function handleIframeMessage(event: MessageEvent) {
+  const data = event.data
+  if (!data || data.source !== 'kiriyama-pg-iframe' || data.seq !== previewRunSeq) return
+
+  if (data.type === 'log') {
+    logs.value.push({
+      level: data.level ?? 'log',
+      text: data.text ?? '',
+      timestamp: data.timestamp ?? Date.now()
+    })
+  } else if (data.type === 'error') {
+    errorMsg.value = data.error ?? 'Error in preview script'
+    webConsoleOpen.value = true
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('message', handleIframeMessage)
+})
+
+// Monaco Editor 按需加载与多 Model 实例管理
 const editorContainerRef = ref<HTMLElement | null>(null)
 const editorLoading = ref(false)
 
 type MonacoModule = typeof import('monaco-editor')
 type MonacoEditorInstance = import('monaco-editor').editor.IStandaloneCodeEditor
+type MonacoTextModel = import('monaco-editor').editor.ITextModel
+type MonacoViewState = import('monaco-editor').editor.ICodeEditorViewState
 
 let monacoMod: MonacoModule | null = null
 const editorInstance = shallowRef<MonacoEditorInstance | null>(null)
 let themesDefined = false
+let suppressContentChange = false
+
+// Web 模式下常驻的 3 个 Model 与对应的光标/滚动/撤回栈状态（对标 VS Code 标签页架构）
+const webModels: Partial<Record<WebTab, MonacoTextModel>> = {}
+const webViewStates: Partial<Record<WebTab, MonacoViewState | null>> = {}
 
 async function ensureMonacoLoaded(): Promise<MonacoModule> {
   if (monacoMod) return monacoMod
 
   editorLoading.value = true
   try {
-    // monaco-editor 0.57+ 已在内部通过 new Worker(new URL(..., import.meta.url)) 原生支持 Vite ESM Worker
     const monaco = await import('monaco-editor')
 
     if (!themesDefined) {
-      // 与 main.scss 的 $color-light-code-bg (#f6f8fa) / $color-dark-code-bg (#1f1f29) 完全对齐
       monaco.editor.defineTheme('kiriyama-light', {
         base: 'vs',
         inherit: true,
@@ -261,7 +537,6 @@ async function ensureMonacoLoaded(): Promise<MonacoModule> {
         }
       })
 
-      // 配置 TypeScript 语言服务以开启完整的类型推断与自动补全（兼容 0.57+ 的 monaco.typescript）
       const tsNs = monaco.typescript ?? monaco.languages?.typescript
       if (tsNs) {
         tsNs.typescriptDefaults.setCompilerOptions({
@@ -278,133 +553,8 @@ async function ensureMonacoLoaded(): Promise<MonacoModule> {
         })
       }
 
-      // 为 C# 注册常用 BCL / LINQ / 语法片段的智能补全
-      monaco.languages.registerCompletionItemProvider('csharp', {
-        triggerCharacters: ['.'],
-        provideCompletionItems(model, position) {
-          const word = model.getWordUntilPosition(position)
-          const range = {
-            startLineNumber: position.lineNumber,
-            endLineNumber: position.lineNumber,
-            startColumn: word.startColumn,
-            endColumn: word.endColumn
-          }
-          const linePrefix = model.getLineContent(position.lineNumber).slice(0, position.column - 1)
-
-          const Kind = monaco.languages.CompletionItemKind
-          const InsertRule = monaco.languages.CompletionItemInsertTextRule
-
-          if (/\bConsole\.\w*$/.test(linePrefix)) {
-            return {
-              suggestions: [
-                {
-                  label: 'WriteLine',
-                  kind: Kind.Method,
-                  detail: 'void Console.WriteLine(object? value)',
-                  documentation:
-                    'Writes the text representation of the specified value, followed by the current line terminator, to the standard output stream.',
-                  insertText: 'WriteLine(${1:value});',
-                  insertTextRules: InsertRule.InsertAsSnippet,
-                  range
-                },
-                {
-                  label: 'Write',
-                  kind: Kind.Method,
-                  detail: 'void Console.Write(object? value)',
-                  insertText: 'Write(${1:value});',
-                  insertTextRules: InsertRule.InsertAsSnippet,
-                  range
-                },
-                {
-                  label: 'ReadLine',
-                  kind: Kind.Method,
-                  detail: 'string? Console.ReadLine()',
-                  insertText: 'ReadLine()',
-                  range
-                }
-              ]
-            }
-          }
-
-          return {
-            suggestions: [
-              {
-                label: 'cw',
-                kind: Kind.Snippet,
-                detail: 'Console.WriteLine(...)',
-                insertText: 'Console.WriteLine(${1:value});',
-                insertTextRules: InsertRule.InsertAsSnippet,
-                range
-              },
-              {
-                label: 'Console.WriteLine',
-                kind: Kind.Method,
-                detail: 'void Console.WriteLine(object? value)',
-                insertText: 'Console.WriteLine(${1:value});',
-                insertTextRules: InsertRule.InsertAsSnippet,
-                range
-              },
-              {
-                label: 'Select',
-                kind: Kind.Method,
-                detail:
-                  'IEnumerable<TResult> Enumerable.Select<TSource, TResult>(Func<TSource, TResult> selector)',
-                insertText: 'Select(${1:x} => ${2:x})',
-                insertTextRules: InsertRule.InsertAsSnippet,
-                range
-              },
-              {
-                label: 'Where',
-                kind: Kind.Method,
-                detail:
-                  'IEnumerable<TSource> Enumerable.Where<TSource>(Func<TSource, bool> predicate)',
-                insertText: 'Where(${1:x} => ${2:true})',
-                insertTextRules: InsertRule.InsertAsSnippet,
-                range
-              },
-              {
-                label: 'ToList',
-                kind: Kind.Method,
-                detail: 'List<TSource> Enumerable.ToList<TSource>()',
-                insertText: 'ToList()',
-                range
-              },
-              {
-                label: 'FirstOrDefault',
-                kind: Kind.Method,
-                detail: 'TSource? Enumerable.FirstOrDefault<TSource>()',
-                insertText: 'FirstOrDefault()',
-                range
-              },
-              {
-                label: 'OrderBy',
-                kind: Kind.Method,
-                detail:
-                  'IOrderedEnumerable<TSource> Enumerable.OrderBy<TSource, TKey>(Func<TSource, TKey> keySelector)',
-                insertText: 'OrderBy(${1:x} => ${2:x})',
-                insertTextRules: InsertRule.InsertAsSnippet,
-                range
-              },
-              {
-                label: 'List',
-                kind: Kind.Class,
-                detail: 'System.Collections.Generic.List<T>',
-                insertText: 'List<${1:int}>',
-                insertTextRules: InsertRule.InsertAsSnippet,
-                range
-              },
-              {
-                label: 'Dictionary',
-                kind: Kind.Class,
-                detail: 'System.Collections.Generic.Dictionary<TKey, TValue>',
-                insertText: 'Dictionary<${1:string}, ${2:int}>',
-                insertTextRules: InsertRule.InsertAsSnippet,
-                range
-              }
-            ]
-          }
-        }
-      })
+      registerCSharpIntelliSense(monaco)
+      registerCppIntelliSense(monaco)
 
       themesDefined = true
     }
@@ -416,36 +566,121 @@ async function ensureMonacoLoaded(): Promise<MonacoModule> {
   }
 }
 
-const DEFAULT_LANGUAGE_SNIPPETS: Record<PlaygroundLanguage, string> = {
-  typescript: [
-    'const nums: number[] = [1, 2, 3, 4, 5]',
-    'console.log("Squares:", nums.map(n => n * n))'
-  ].join('\n'),
-  javascript: [
-    'const nums = [1, 2, 3, 4, 5]',
-    'console.log("Squares:", nums.map(n => n * n))'
-  ].join('\n'),
-  csharp: [
-    'var nums = Enumerable.Range(1, 5).Select(x => x * x);',
-    'Console.WriteLine("Hello from .NET WASM! " + string.Join(", ", nums));'
-  ].join('\n')
+const LANG_EXT_MAP: Record<Exclude<PlaygroundLanguage, 'html'>, string> = {
+  typescript: 'ts',
+  javascript: 'js',
+  csharp: 'cs',
+  c: 'c',
+  cpp: 'cpp'
 }
 
-// 为每种语言维护独立的代码缓存，切换语言时互不污染（避免把文章里的 JS/TS 代码直接带进 C# 编译器或残留 TS 报错）
-const langCodeMap = ref<Record<PlaygroundLanguage, string>>({
-  typescript: DEFAULT_LANGUAGE_SNIPPETS.typescript,
-  javascript: DEFAULT_LANGUAGE_SNIPPETS.javascript,
-  csharp: DEFAULT_LANGUAGE_SNIPPETS.csharp
-})
-const originLanguage = ref<PlaygroundLanguage>('typescript')
+let modelSeq = 0
+let csharpValidateTimer: ReturnType<typeof setTimeout> | null = null
 
-function createFreshModel(monaco: MonacoModule, value: string, lang: PlaygroundLanguage) {
-  const ext = lang === 'csharp' ? 'cs' : lang === 'typescript' ? 'ts' : 'js'
+function createFreshCodeModel(
+  monaco: MonacoModule,
+  value: string,
+  lang: Exclude<PlaygroundLanguage, 'html'>
+): MonacoTextModel {
+  const ext = LANG_EXT_MAP[lang] ?? 'ts'
   const uri = monaco.Uri.parse(`inmemory://playground/snippet-${++modelSeq}.${ext}`)
   return monaco.editor.createModel(value, lang, uri)
 }
 
-let modelSeq = 0
+function ensureWebModels(monaco: MonacoModule) {
+  const tabs: Array<{ tab: WebTab; ext: string }> = [
+    { tab: 'html', ext: 'html' },
+    { tab: 'css', ext: 'css' },
+    { tab: 'javascript', ext: 'js' }
+  ]
+  for (const { tab, ext } of tabs) {
+    if (!webModels[tab] || webModels[tab]!.isDisposed()) {
+      const uri = monaco.Uri.parse(`inmemory://playground/web-${++modelSeq}.${ext}`)
+      webModels[tab] = monaco.editor.createModel(webFiles.value[tab], tab, uri)
+    } else if (webModels[tab]!.getValue() !== webFiles.value[tab]) {
+      webModels[tab]!.setValue(webFiles.value[tab])
+    }
+  }
+}
+
+function disposeWebModels() {
+  for (const tab of ['html', 'css', 'javascript'] as WebTab[]) {
+    webModels[tab]?.dispose()
+    webModels[tab] = undefined
+    webViewStates[tab] = undefined
+  }
+}
+
+function handleSelectWebTab(nextTab: WebTab) {
+  if (activeWebTab.value === nextTab || !editorInstance.value || !monacoMod) return
+
+  // 1. 保存当前 Tab 的光标、选中区域与滚动位置
+  webViewStates[activeWebTab.value] = editorInstance.value.saveViewState()
+
+  // 2. 更新 Pinia Store 中的激活 Tab 并切换 Model
+  setWebTab(nextTab)
+  ensureWebModels(monacoMod)
+  const targetModel = webModels[nextTab]!
+
+  suppressContentChange = true
+  try {
+    editorInstance.value.setModel(targetModel)
+  } finally {
+    suppressContentChange = false
+  }
+
+  // 3. 恢复目标 Tab 的光标与滚动状态
+  if (webViewStates[nextTab]) {
+    editorInstance.value.restoreViewState(webViewStates[nextTab]!)
+  }
+  editorInstance.value.focus()
+}
+
+function applyCompilerMarkers(
+  owner: Exclude<PlaygroundLanguage, 'html'>,
+  diagnostics: RunDiagnostic[]
+) {
+  if (!monacoMod || !editorInstance.value || language.value !== owner) return
+  const model = editorInstance.value.getModel()
+  if (!model) return
+
+  const markers = diagnostics.map((d) => {
+    const line = Math.min(Math.max(1, d.line ?? 1), model.getLineCount())
+    const col = Math.max(1, d.column ?? 1)
+    const maxCol = model.getLineMaxColumn(line)
+    return {
+      severity:
+        d.severity === 'warning'
+          ? monacoMod!.MarkerSeverity.Warning
+          : monacoMod!.MarkerSeverity.Error,
+      message: d.id ? `${d.id}: ${d.message}` : d.message,
+      startLineNumber: line,
+      startColumn: col,
+      endLineNumber: line,
+      endColumn: Math.max(col + 1, maxCol)
+    }
+  })
+  monacoMod.editor.setModelMarkers(model, owner, markers)
+}
+
+function scheduleCSharpValidation(source: string) {
+  if (csharpValidateTimer) {
+    clearTimeout(csharpValidateTimer)
+    csharpValidateTimer = null
+  }
+  if (language.value !== 'csharp') return
+  csharpValidateTimer = setTimeout(async () => {
+    if (!isOpen.value || language.value !== 'csharp' || running.value) return
+    const diagnostics = await validateCSharpCode(source)
+    if (
+      isOpen.value &&
+      language.value === 'csharp' &&
+      editorInstance.value?.getValue() === source
+    ) {
+      applyCompilerMarkers('csharp', diagnostics)
+    }
+  }, 650)
+}
 
 async function mountOrSyncEditor() {
   if (!isOpen.value) return
@@ -454,15 +689,22 @@ async function mountOrSyncEditor() {
   if (!container) return
 
   const monaco = await ensureMonacoLoaded()
-  // 如果弹窗在等待加载期间被关闭，直接中止
   if (!isOpen.value || !editorContainerRef.value) return
 
+  let targetModel: MonacoTextModel
+  if (language.value === 'html') {
+    ensureWebModels(monaco)
+    targetModel = webModels[activeWebTab.value]!
+  } else {
+    targetModel = createFreshCodeModel(monaco, code.value, language.value)
+  }
+
   if (!editorInstance.value) {
-    const initialModel = createFreshModel(monaco, code.value, language.value)
     const editor = monaco.editor.create(editorContainerRef.value, {
-      model: initialModel,
+      model: targetModel,
       theme: isDark.value ? 'kiriyama-dark' : 'kiriyama-light',
       automaticLayout: true,
+      colorDecorators: true,
       minimap: { enabled: false },
       overviewRulerBorder: false,
       overviewRulerLanes: 0,
@@ -478,15 +720,30 @@ async function mountOrSyncEditor() {
     })
 
     editor.onDidChangeModelContent(() => {
+      if (suppressContentChange) return
       const val = editor.getValue()
+
+      if (language.value === 'html') {
+        const currentTab = activeWebTab.value
+        if (webFiles.value[currentTab] !== val) {
+          webFiles.value[currentTab] = val
+          scheduleWebPreviewUpdate(currentTab)
+        }
+        return
+      }
+
       if (val !== code.value) {
         code.value = val
       }
       langCodeMap.value[language.value] = val
-      // 修改代码时清除上一次 C# 编译留下的错误波浪线
-      const model = editor.getModel()
-      if (monacoMod && model && language.value === 'csharp') {
-        monacoMod.editor.setModelMarkers(model, 'csharp', [])
+
+      if (language.value === 'csharp') {
+        scheduleCSharpValidation(val)
+      } else if (monacoMod && (language.value === 'c' || language.value === 'cpp')) {
+        const model = editor.getModel()
+        if (model) {
+          monacoMod.editor.setModelMarkers(model, language.value, [])
+        }
       }
     })
 
@@ -498,36 +755,57 @@ async function mountOrSyncEditor() {
     editorInstance.value = editor
   } else {
     const oldModel = editorInstance.value.getModel()
-    const nextModel = createFreshModel(monaco, code.value, language.value)
-    editorInstance.value.setModel(nextModel)
-    oldModel?.dispose()
+    suppressContentChange = true
+    try {
+      editorInstance.value.setModel(targetModel)
+    } finally {
+      suppressContentChange = false
+    }
+    const isOldWebModel = Object.values(webModels).includes(oldModel ?? undefined)
+    if (oldModel && !isOldWebModel && oldModel !== targetModel) {
+      oldModel.dispose()
+    }
     monaco.editor.setTheme(isDark.value ? 'kiriyama-dark' : 'kiriyama-light')
   }
 }
 
 function disposeEditor() {
+  if (csharpValidateTimer) {
+    clearTimeout(csharpValidateTimer)
+    csharpValidateTimer = null
+  }
+  if (webPreviewTimer) {
+    clearTimeout(webPreviewTimer)
+    webPreviewTimer = null
+  }
   if (editorInstance.value) {
-    const oldModel = editorInstance.value.getModel()
+    const currentModel = editorInstance.value.getModel()
+    const isCurrentWebModel = Object.values(webModels).includes(currentModel ?? undefined)
     editorInstance.value.dispose()
-    oldModel?.dispose()
+    if (currentModel && !isCurrentWebModel) {
+      currentModel.dispose()
+    }
     editorInstance.value = null
   }
+  disposeWebModels()
 }
 
 watch(isOpen, async (open) => {
   if (open) {
     clearOutput()
-    originLanguage.value = language.value
-    langCodeMap.value = {
-      typescript: DEFAULT_LANGUAGE_SNIPPETS.typescript,
-      javascript: DEFAULT_LANGUAGE_SNIPPETS.javascript,
-      csharp: DEFAULT_LANGUAGE_SNIPPETS.csharp,
-      [language.value]: code.value
-    }
+    webConsoleOpen.value = false
     await mountOrSyncEditor()
-    // 打开 Playground 时如果是 TS/JS，自动执行一次让右侧立刻看到结果
-    if (language.value === 'typescript' || language.value === 'javascript') {
+
+    if (language.value === 'html') {
+      rebuildWebPreviewImmediate()
+    } else if (language.value === 'typescript' || language.value === 'javascript') {
       await handleRun()
+    } else if (language.value === 'csharp') {
+      ensureCSharpRunner()
+        .then(() => scheduleCSharpValidation(code.value))
+        .catch(() => {})
+    } else if (language.value === 'c' || language.value === 'cpp') {
+      ensureClangCompiler(language.value).catch(() => {})
     }
   } else {
     langMenuOpen.value = false
@@ -542,20 +820,61 @@ watch(isDark, (dark) => {
 })
 
 watch(language, (newLang, oldLang) => {
-  if (oldLang && editorInstance.value) {
+  if (oldLang && oldLang !== 'html' && editorInstance.value) {
     langCodeMap.value[oldLang] = editorInstance.value.getValue()
+  } else if (oldLang === 'html' && editorInstance.value) {
+    webViewStates[activeWebTab.value] = editorInstance.value.saveViewState()
   }
-  const targetCode = langCodeMap.value[newLang] ?? DEFAULT_LANGUAGE_SNIPPETS[newLang]
-  code.value = targetCode
+
   clearOutput()
 
+  if (newLang === 'html') {
+    if (monacoMod && editorInstance.value) {
+      const oldModel = editorInstance.value.getModel()
+      ensureWebModels(monacoMod)
+      const nextModel = webModels[activeWebTab.value]!
+      suppressContentChange = true
+      try {
+        editorInstance.value.setModel(nextModel)
+      } finally {
+        suppressContentChange = false
+      }
+      const isOldWebModel = Object.values(webModels).includes(oldModel ?? undefined)
+      if (oldModel && !isOldWebModel) {
+        oldModel.dispose()
+      }
+      if (webViewStates[activeWebTab.value]) {
+        editorInstance.value.restoreViewState(webViewStates[activeWebTab.value]!)
+      }
+    }
+    rebuildWebPreviewImmediate()
+    return
+  }
+
+  const targetCode = langCodeMap.value[newLang] ?? DEFAULT_LANGUAGE_SNIPPETS[newLang]
+  code.value = targetCode
+
   if (monacoMod && editorInstance.value) {
-    // 彻底销毁旧语言的 Model 并创建带对应扩展名 (.ts/.js/.cs) 的新 Model，
-    // 防止 ts.worker 的异步校验（如 TS1434 / TS2304）残留在 C# 模式下
     const oldModel = editorInstance.value.getModel()
-    const nextModel = createFreshModel(monacoMod, targetCode, newLang)
-    editorInstance.value.setModel(nextModel)
-    oldModel?.dispose()
+    const nextModel = createFreshCodeModel(monacoMod, targetCode, newLang)
+    suppressContentChange = true
+    try {
+      editorInstance.value.setModel(nextModel)
+    } finally {
+      suppressContentChange = false
+    }
+    const isOldWebModel = Object.values(webModels).includes(oldModel ?? undefined)
+    if (oldModel && !isOldWebModel) {
+      oldModel.dispose()
+    }
+  }
+
+  if (newLang === 'csharp') {
+    ensureCSharpRunner()
+      .then(() => scheduleCSharpValidation(targetCode))
+      .catch(() => {})
+  } else if (newLang === 'c' || newLang === 'cpp') {
+    ensureClangCompiler(newLang).catch(() => {})
   }
 })
 
@@ -565,19 +884,37 @@ function selectLanguage(lang: PlaygroundLanguage) {
 }
 
 function handleReset() {
-  if (language.value === originLanguage.value) {
-    resetCode()
-  } else {
-    code.value = DEFAULT_LANGUAGE_SNIPPETS[language.value]
+  resetCode()
+  if (language.value === 'html') {
+    if (monacoMod) {
+      suppressContentChange = true
+      try {
+        ensureWebModels(monacoMod)
+      } finally {
+        suppressContentChange = false
+      }
+    }
+    rebuildWebPreviewImmediate()
+    return
   }
-  langCodeMap.value[language.value] = code.value
+
   if (editorInstance.value && editorInstance.value.getValue() !== code.value) {
-    editorInstance.value.setValue(code.value)
+    suppressContentChange = true
+    try {
+      editorInstance.value.setValue(code.value)
+    } finally {
+      suppressContentChange = false
+    }
   }
   clearOutput()
 }
 
 async function handleRun() {
+  if (language.value === 'html') {
+    rebuildWebPreviewImmediate()
+    return
+  }
+
   if (running.value) return
   running.value = true
   clearOutput()
@@ -588,28 +925,8 @@ async function handleRun() {
     errorMsg.value = result.error ?? ''
     lastDurationMs.value = result.durationMs
 
-    // 如果返回了 Roslyn 的行列诊断信息，同步画到左侧 Monaco 编辑器的波浪线上
-    if (monacoMod && editorInstance.value && language.value === 'csharp') {
-      const model = editorInstance.value.getModel()
-      if (model) {
-        const markers = (result.diagnostics ?? []).map((d) => {
-          const line = Math.min(Math.max(1, d.line ?? 1), model.getLineCount())
-          const col = Math.max(1, d.column ?? 1)
-          const maxCol = model.getLineMaxColumn(line)
-          return {
-            severity:
-              d.severity === 'warning'
-                ? monacoMod!.MarkerSeverity.Warning
-                : monacoMod!.MarkerSeverity.Error,
-            message: d.id ? `${d.id}: ${d.message}` : d.message,
-            startLineNumber: line,
-            startColumn: col,
-            endLineNumber: line,
-            endColumn: Math.max(col + 1, maxCol)
-          }
-        })
-        monacoMod.editor.setModelMarkers(model, 'csharp', markers)
-      }
+    if (language.value === 'csharp' || language.value === 'c' || language.value === 'cpp') {
+      applyCompilerMarkers(language.value, result.diagnostics ?? [])
     }
   } finally {
     running.value = false
@@ -617,6 +934,7 @@ async function handleRun() {
 }
 
 onBeforeUnmount(() => {
+  window.removeEventListener('message', handleIframeMessage)
   disposeEditor()
 })
 </script>
@@ -715,7 +1033,7 @@ onBeforeUnmount(() => {
   top: 100%;
   z-index: 60;
   margin-top: 0.375rem;
-  width: 11.5rem;
+  width: 12.75rem;
   padding: 0.375rem;
   border-radius: 0.875rem;
   border: 1px solid var(--ui-menu-border);
@@ -799,17 +1117,87 @@ onBeforeUnmount(() => {
 /* 主体左右分栏 */
 .pg-body {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  grid-template-columns: 1.15fr 0.85fr;
   flex: 1;
   min-height: 0;
 }
 
 .pg-editor-pane {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
   background-color: var(--ui-code-bg);
   border-right: 1px solid var(--ui-line);
+}
+
+/* Web 模式左侧上方的 HTML / CSS / JS Tab 栏 */
+.pg-web-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.65rem 0;
+  background-color: var(--ui-surface);
+  border-bottom: 1px solid var(--ui-line);
+  flex-shrink: 0;
+}
+
+.pg-web-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  border: 1px solid transparent;
+  border-bottom: none;
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--ui-text-muted);
+  background-color: transparent;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background-color 0.15s;
+
+  &:hover {
+    color: var(--ui-text-strong);
+    background-color: var(--ui-canvas);
+  }
+}
+
+.pg-web-tab--active {
+  color: var(--ui-text-strong);
+  font-weight: 600;
+  background-color: var(--ui-code-bg);
+  border-color: var(--ui-line);
+  margin-bottom: -1px;
+  padding-bottom: calc(0.4rem + 1px);
+}
+
+.pg-web-tab__ext {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.25rem;
+  background-color: var(--ui-canvas);
+  color: var(--ui-accent);
+}
+
+.pg-web-tab__dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 999px;
+  background-color: var(--ui-accent);
+  opacity: 0.75;
+}
+
+.pg-editor-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
 }
 
 .pg-editor-host {
@@ -827,7 +1215,7 @@ onBeforeUnmount(() => {
   background-color: inherit;
 }
 
-/* 右侧控制台输出区 */
+/* 右侧预览与控制台输出区 */
 .pg-output-pane {
   display: flex;
   flex-direction: column;
@@ -851,6 +1239,12 @@ onBeforeUnmount(() => {
   gap: 0.5rem;
 }
 
+.pg-output-header__right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .pg-output-title {
   font-size: 0.75rem;
   font-weight: 600;
@@ -866,6 +1260,84 @@ onBeforeUnmount(() => {
   background-color: var(--ui-canvas);
   color: var(--ui-accent);
   font-variant-numeric: tabular-nums;
+}
+
+/* Web 预览 iframe 容器 */
+.pg-preview-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background-color: #ffffff;
+}
+
+.pg-preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  background-color: #ffffff;
+}
+
+.pg-console-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--ui-line);
+  background-color: var(--ui-canvas);
+  color: var(--ui-text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background-color 0.15s;
+
+  &:hover,
+  &--active {
+    color: var(--ui-text-strong);
+    border-color: var(--ui-accent);
+  }
+}
+
+.pg-console-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background-color: var(--ui-surface);
+  color: var(--ui-accent);
+
+  &--error {
+    background-color: rgb(229 72 77 / 0.16);
+    color: var(--ui-wrong);
+  }
+}
+
+/* Web 模式底部可折叠 Console 抽屉 */
+.pg-web-console {
+  display: flex;
+  flex-direction: column;
+  height: 36%;
+  min-height: 130px;
+  max-height: 240px;
+  border-top: 1px solid var(--ui-line);
+  background-color: var(--ui-surface);
+}
+
+.pg-web-console__header {
+  padding: 0.35rem 0.875rem;
+}
+
+.pg-web-console__body {
+  padding: 0.5rem 0.875rem;
 }
 
 .pg-clear-btn {

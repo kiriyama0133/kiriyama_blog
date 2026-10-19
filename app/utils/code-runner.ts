@@ -14,11 +14,201 @@ export interface CodeDiagnostic {
   column?: number
 }
 
+export type RunDiagnostic = CodeDiagnostic
+
 export interface RunResult {
   entries: ConsoleEntry[]
   error?: string
   diagnostics?: CodeDiagnostic[]
   durationMs: number
+}
+
+interface ClangWasmRunOutput {
+  stdout: string
+  stderr: string
+  output: string
+  errors: string[]
+  exitCode: number | null
+  compileMs?: number
+  runMs?: number | null
+}
+
+interface ClangWasmCompiler {
+  run: (
+    code: string,
+    input?: string,
+    options?: {
+      std?: string | null
+      args?: string[]
+      compileArgs?: string[]
+      fileName?: string
+    }
+  ) => Promise<ClangWasmRunOutput>
+  dispose: () => void
+}
+
+interface ClangWasmModule {
+  createCompiler: (
+    language: 'c' | 'cpp',
+    options: {
+      baseUrl: string
+      std?: string | null
+      compileArgs?: string[]
+      onProgress?: (progress: number) => void
+    }
+  ) => Promise<ClangWasmCompiler>
+}
+
+const CLANG_WASM_ESM_URL = 'https://cdn.jsdelivr.net/npm/@live-codes/clang-wasm@0.3.0/+esm'
+const CLANG_WASM_ASSETS_URL = 'https://cdn.jsdelivr.net/npm/@live-codes/clang-wasm@0.3.0/assets/'
+
+const clangCompilerPromises: Partial<Record<'c' | 'cpp', Promise<ClangWasmCompiler>>> = {}
+
+/**
+ * 从 jsDelivr CDN 按需加载 @live-codes/clang-wasm (Clang 22 + LLD + WASI sysroot)
+ * C 与 C++ 共享同一份底层 WebAssembly 运行时资产
+ */
+export async function ensureClangCompiler(lang: 'c' | 'cpp'): Promise<ClangWasmCompiler> {
+  if (clangCompilerPromises[lang]) {
+    return clangCompilerPromises[lang]!
+  }
+
+  clangCompilerPromises[lang] = (async () => {
+    try {
+      const mod = (await import(/* @vite-ignore */ CLANG_WASM_ESM_URL)) as ClangWasmModule
+      return await mod.createCompiler(lang, {
+        baseUrl: CLANG_WASM_ASSETS_URL,
+        std: lang === 'c' ? 'gnu23' : 'gnu++23'
+      })
+    } catch (err) {
+      clangCompilerPromises[lang] = undefined
+      throw err
+    }
+  })()
+
+  return clangCompilerPromises[lang]!
+}
+
+const C_IMPLICIT_HEADERS = [
+  '#include <stdio.h>',
+  '#include <stdlib.h>',
+  '#include <string.h>',
+  '#include <stdbool.h>',
+  '#include <stdint.h>',
+  '#include <math.h>'
+].join('\n')
+
+const CPP_IMPLICIT_HEADERS = [
+  '#include <iostream>',
+  '#include <vector>',
+  '#include <string>',
+  '#include <algorithm>',
+  '#include <map>',
+  '#include <unordered_map>',
+  '#include <set>',
+  '#include <memory>',
+  '#include <numeric>',
+  '#include <cmath>',
+  '#include <cstdio>'
+].join('\n')
+
+function prepareClangSource(lang: 'c' | 'cpp', code: string): string {
+  const fileName = lang === 'c' ? 'main.c' : 'main.cpp'
+  const headers = lang === 'c' ? C_IMPLICIT_HEADERS : CPP_IMPLICIT_HEADERS
+  const hasMain = /\bmain\s*\(/.test(code)
+
+  if (hasMain) {
+    return `${headers}\n#line 1 "${fileName}"\n${code}`
+  }
+
+  // 如果文章中的代码块只是几行演示片段（不含 main 函数），自动为其包裹 main 入口并保持真实行号
+  if (lang === 'c') {
+    return [headers, 'int main(void) {', `#line 1 "${fileName}"`, code, 'return 0;', '}'].join('\n')
+  }
+
+  return [
+    headers,
+    'using namespace std;',
+    'int main() {',
+    `#line 1 "${fileName}"`,
+    code,
+    'return 0;',
+    '}'
+  ].join('\n')
+}
+
+function parseClangDiagnostics(errorLines: string[]): CodeDiagnostic[] {
+  const diagnostics: CodeDiagnostic[] = []
+  // 匹配例如: main.cpp:5:12: error: expected ';' after expression
+  const diagRegex = /^(?:.*?):(\d+):(\d+):\s*(fatal error|error|warning|note):\s*(.+)$/i
+
+  for (const rawLine of errorLines) {
+    const m = rawLine.match(diagRegex)
+    if (m) {
+      const line = Math.max(1, Number.parseInt(m[1] ?? '1', 10))
+      const column = Math.max(1, Number.parseInt(m[2] ?? '1', 10))
+      const rawSev = (m[3] ?? 'error').toLowerCase()
+      const message = m[4] ?? rawLine
+      if (rawSev === 'note') continue
+      diagnostics.push({
+        line,
+        column,
+        severity: rawSev === 'warning' ? 'warning' : 'error',
+        message
+      })
+    }
+  }
+  return diagnostics
+}
+
+async function runClangInWasm(lang: 'c' | 'cpp', code: string): Promise<RunResult> {
+  const start = performance.now()
+  try {
+    const compiler = await ensureClangCompiler(lang)
+    const prepared = prepareClangSource(lang, code)
+    const res = await compiler.run(prepared)
+
+    const entries: ConsoleEntry[] = []
+    const stdoutText = (res.stdout || res.output || '').replace(/\r\n/g, '\n').replace(/\n$/, '')
+    if (stdoutText) {
+      entries.push({
+        level: 'log',
+        text: stdoutText,
+        timestamp: Date.now()
+      })
+    }
+
+    const stderrText = (res.stderr || '').replace(/\r\n/g, '\n').replace(/\n$/, '')
+    if (stderrText && res.exitCode === 0) {
+      entries.push({
+        level: 'warn',
+        text: stderrText,
+        timestamp: Date.now()
+      })
+    }
+
+    const diagnostics = parseClangDiagnostics(res.errors ?? [])
+    let errorText: string | undefined
+
+    if (res.errors && res.errors.length > 0) {
+      errorText = res.errors.join('\n')
+    } else if (res.exitCode !== null && res.exitCode !== 0) {
+      errorText = stderrText || `Program exited with non-zero code: ${res.exitCode}`
+    }
+
+    return {
+      entries,
+      error: errorText,
+      diagnostics,
+      durationMs: Math.round(performance.now() - start)
+    }
+  } catch (err) {
+    return {
+      entries: [],
+      error: err instanceof Error ? err.message : String(err),
+      durationMs: Math.round(performance.now() - start)
+    }
+  }
 }
 
 interface BlazorWasmRunResult {
@@ -52,6 +242,7 @@ const BLAZOR_WASM_CDN_BASE = 'https://cdn.jsdelivr.net/npm/@live-codes/blazor-wa
 const BLAZOR_WASM_SCRIPT_URL = `${BLAZOR_WASM_CDN_BASE}blazor-wasm.js`
 
 let csharpRunnerPromise: Promise<BlazorWasmRunner> | null = null
+let csharpBusy = false
 
 function loadScriptOnce(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -75,7 +266,7 @@ function loadScriptOnce(src: string): Promise<void> {
 /**
  * 从 jsDelivr CDN 按需加载 @live-codes/blazor-wasm (.NET WebAssembly + Roslyn)
  */
-async function ensureCSharpRunner(): Promise<BlazorWasmRunner> {
+export async function ensureCSharpRunner(): Promise<BlazorWasmRunner> {
   if (csharpRunnerPromise) return csharpRunnerPromise
 
   csharpRunnerPromise = (async () => {
@@ -145,18 +336,73 @@ function wrapCSharpSnippet(code: string): string {
   ].join('\n')
 }
 
+/**
+ * 仅使用 Roslyn 编译检查语法与类型诊断（不实际执行用户代码），用于编辑器输入时的实时波浪线提示
+ */
+export async function validateCSharpCode(code: string): Promise<CodeDiagnostic[]> {
+  if (!code.trim() || csharpBusy) return []
+  try {
+    const runner = await ensureCSharpRunner()
+    if (csharpBusy) return []
+    csharpBusy = true
+    try {
+      const hasMainOrClass = /\b(class|struct|interface|namespace)\s+\w+/.test(code)
+      const checkSource = hasMainOrClass
+        ? withImplicitUsings(code)
+        : [CSHARP_IMPLICIT_USINGS, 'if (bool.Parse("true")) return;', '#line 1', code].join('\n')
+
+      // 如果有 class 但没有语句，仅当不含有效无限循环时做静态检查；
+      // 顶层语句由于前面注入了 if (bool.Parse("true")) return; 会在 0ms 立即退出，绝对不会执行用户逻辑
+      if (hasMainOrClass && !/\bstatic\b[\s\S]*?\bMain\s*\(/.test(code)) {
+        const res = await runner.run(checkSource)
+        return (res.errors ?? [])
+          .filter((e) => e.id !== 'CS5001')
+          .map((err) => ({
+            id: err.id,
+            message: err.message,
+            severity: err.severity?.toLowerCase() === 'warning' ? 'warning' : 'error',
+            line: err.line ? Math.max(1, err.line) : 1,
+            column: err.column ?? 1
+          }))
+      }
+
+      if (!hasMainOrClass) {
+        const res = await runner.run(checkSource)
+        return (res.errors ?? []).map((err) => ({
+          id: err.id,
+          message: err.message,
+          severity: err.severity?.toLowerCase() === 'warning' ? 'warning' : 'error',
+          line: err.line ? Math.max(1, err.line) : 1,
+          column: err.column ?? 1
+        }))
+      }
+      return []
+    } finally {
+      csharpBusy = false
+    }
+  } catch {
+    return []
+  }
+}
+
 async function runCSharpInWasm(code: string): Promise<RunResult> {
   const start = performance.now()
   try {
     const runner = await ensureCSharpRunner()
-    let res = await runner.run(withImplicitUsings(code))
+    csharpBusy = true
+    let res: BlazorWasmRunResult
+    try {
+      res = await runner.run(withImplicitUsings(code))
 
-    // 如果报缺少 Main 入口（CS5001），自动包装后再编译执行
-    const missingMain = res.errors?.some(
-      (e) => e.id === 'CS5001' || e.message?.includes('suitable for an entry point')
-    )
-    if (!res.success && missingMain && !/\bstatic\b[\s\S]*?\bMain\s*\(/.test(code)) {
-      res = await runner.run(wrapCSharpSnippet(code))
+      // 如果报缺少 Main 入口（CS5001），自动包装后再编译执行
+      const missingMain = res.errors?.some(
+        (e) => e.id === 'CS5001' || e.message?.includes('suitable for an entry point')
+      )
+      if (!res.success && missingMain && !/\bstatic\b[\s\S]*?\bMain\s*\(/.test(code)) {
+        res = await runner.run(wrapCSharpSnippet(code))
+      }
+    } finally {
+      csharpBusy = false
     }
 
     const entries: ConsoleEntry[] = []
@@ -372,6 +618,10 @@ export async function runPlaygroundCode(
 
   if (language === 'csharp') {
     return await runCSharpInWasm(code)
+  }
+
+  if (language === 'c' || language === 'cpp') {
+    return await runClangInWasm(language, code)
   }
 
   return {
