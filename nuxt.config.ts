@@ -9,8 +9,7 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@nuxt/eslint',
     '@nuxtjs/i18n',
-    'gsap-nuxt-module',
-    'nuxt-mathjax'
+    'gsap-nuxt-module'
   ],
   i18n: {
     strategy: 'no_prefix',
