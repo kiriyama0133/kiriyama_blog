@@ -51,6 +51,8 @@ export default defineNuxtConfig({
         }
       },
       markdown: {
+        remarkPlugins: { 'remark-math': {} },
+        rehypePlugins: { 'rehype-mathjax': {} },
         // v3 默认 highlight: false
         highlight: {
           // 键名映射 html.<key>：dark → 生成 html.dark .shiki span { color: var(--shiki-dark) }
