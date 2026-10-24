@@ -40,6 +40,11 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()]
   },
+  mdc: {
+    components: {
+      customElements: ['mjx-container']
+    }
+  },
   content: {
     build: {
       pathMeta: {

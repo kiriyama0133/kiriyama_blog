@@ -241,8 +241,8 @@ $font-mono:
        带连字符的名字（内容管线原本会写成驼峰，浏览器直接丢弃）。这里只负责布局：
        display 复位成 block（preflight 已经是 block，写明是为了不依赖它），
        height:auto 让宽高比跟着 viewBox 走。注意 .mermaid svg 更具体，会盖过这里；
-       同时用 :not(mjx-container svg) 排除掉 MathJax 公式里的 SVG，避免行内公式被撑成块级换行。 */
-    svg:not(mjx-container svg) {
+       同时排除掉 MathJax 公式里的 SVG（含未重启 dev server 时被转成 mjxcontainer 的情况），避免行内公式被撑成块级换行。 */
+    svg:not(mjx-container svg, mjxcontainer svg, .MathJax svg) {
       display: block;
       max-width: 100%;
       height: auto;
@@ -250,12 +250,16 @@ $font-mono:
     }
 
     /* ----- MathJax 数学公式（rehype-mathjax 渲染的 SVG） ----- */
-    mjx-container {
+    mjx-container,
+    mjxcontainer,
+    .MathJax {
       display: inline;
+      margin: 0;
 
       svg {
         display: inline;
         max-width: 100%;
+        margin: 0;
       }
 
       &[display='true'] {
