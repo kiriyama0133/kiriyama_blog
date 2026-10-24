@@ -33,6 +33,7 @@
     "mermaid": "^11.4.0",
     "monaco-editor": "^0.57.0",
     "nuxt": "^4.5.2",
+    "nuxt-mathjax": "^1.1.1",
     "pinia": "^4.0.3",
     "sucrase": "^3.35.1",
     "vue": "^3.5.42",
@@ -57,5 +58,6 @@
     "sass": "^1.105.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3"
-  }
+  },
+  "packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c"
 }
